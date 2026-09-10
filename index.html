@@ -10,7 +10,7 @@
     --ink:#22241E;
     --ink-muted:#6C7062;
     --border:#DEE1D3;
-    --accent:#D9736A;
+    --accent:#D9635A;
     --accent-ink:#1B1B1B;
     --accent-soft:#F2E0DE;
     --shadow: 0 1px 2px rgba(30,32,26,0.07), 0 10px 26px -14px rgba(30,32,26,0.22);
@@ -201,7 +201,27 @@
   .trainer-stage.th-dark{ background:#2B2B2B; }
   .trainer-stage.th-dark .main-char, .trainer-stage.th-dark .side-char{ color:#FFFFFF; }
 
-  .bottom-row{ display:flex; align-items:center; gap:10px; margin-top:16px; }
+  .stage-wrap{ position:relative; }
+  .options-toggle{
+    position:absolute; bottom:-13px; left:50%; transform:translateX(-50%);
+    width:26px; height:26px; border-radius:50%;
+    background:var(--surface); border:1px solid var(--border); color:var(--ink-muted);
+    display:flex; align-items:center; justify-content:center;
+    padding:0; cursor:pointer; box-shadow:var(--shadow); z-index:3;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .options-toggle:hover{ color:var(--accent); border-color:var(--accent); }
+  .options-toggle svg{ width:12px; height:12px; display:block; transition:transform .3s ease; }
+  .options-toggle[aria-expanded="true"] svg{ transform:rotate(180deg); }
+
+  .options-panel{
+    margin-top:16px;
+    display:grid; grid-template-rows:0fr;
+    transition:grid-template-rows .35s ease;
+  }
+  .options-panel.expanded{ grid-template-rows:1fr; }
+  .options-panel-inner{ overflow:hidden; min-height:0; }
+  .bottom-row{ display:flex; align-items:center; gap:10px; }
   .bottom-row select{ flex:1; }
   .show-btn{ font-family:var(--font-body); font-size:12px; padding:9px 16px; border-radius:8px; border:1px solid var(--border); cursor:pointer; white-space:nowrap; }
 
@@ -296,22 +316,33 @@
     <!-- Page 4: Character trainer -->
     <section class="page" id="page4">
       <div class="mode-row" id="modeButtons"></div>
-      <div class="trainer-stage th-light" id="trainerStage">
-        <canvas id="strokeCanvas" width="100" height="100"></canvas>
-        <div class="char-stage" id="charStage">
-          <span class="side-char" id="leftSideChar" hidden></span>
-          <span class="main-char" id="mainChar">&nbsp;</span>
-          <span class="side-char" id="rightSideChar" hidden></span>
+      <div class="stage-wrap">
+        <div class="trainer-stage th-light" id="trainerStage">
+          <canvas id="strokeCanvas" width="100" height="100"></canvas>
+          <div class="char-stage" id="charStage">
+            <span class="side-char" id="leftSideChar" hidden></span>
+            <span class="main-char" id="mainChar">&nbsp;</span>
+            <span class="side-char" id="rightSideChar" hidden></span>
+          </div>
+          <button class="go-btn" id="goBtn">Go</button>
         </div>
-        <button class="go-btn" id="goBtn">Go</button>
+        <button class="options-toggle" id="optionsToggle" type="button" aria-expanded="false" aria-label="More options">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3.5 6l4.5 4.5L12.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
-      <div class="bottom-row">
-        <select id="sequenceSelect">
-          <option value="Random">Random</option>
-          <option value="Continue Gojūon Order">Continue Gojūon Order</option>
-          <option value="Start from Gojūon Order">Start from Gojūon Order</option>
-        </select>
-        <button class="show-btn" id="showBtn">Show</button>
+      <div class="options-panel" id="optionsPanel">
+        <div class="options-panel-inner">
+          <div class="bottom-row">
+            <select id="sequenceSelect">
+              <option value="Random">Random</option>
+              <option value="Continue Gojūon Order">Continue Gojūon Order</option>
+              <option value="Start from Gojūon Order">Start from Gojūon Order</option>
+            </select>
+            <button class="show-btn" id="showBtn">Show</button>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -525,7 +556,20 @@
   var sequenceSelect = $("sequenceSelect");
   var showBtn = $("showBtn");
   var strokeCanvas = $("strokeCanvas");
+  var optionsToggle = $("optionsToggle");
+  var optionsPanel = $("optionsPanel");
   var page4Initialized = false;
+  var optionsExpanded = false;
+
+  function setOptionsExpanded(expanded){
+    optionsExpanded = expanded;
+    optionsPanel.classList.toggle("expanded", expanded);
+    optionsToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+
+  optionsToggle.addEventListener("click", function(){
+    setOptionsExpanded(!optionsExpanded);
+  });
 
   function isDark(){ return state.theme === "Dark Mode"; }
 
@@ -546,7 +590,7 @@
     var dark = isDark();
     modeButtonsEl.querySelectorAll(".mode-btn").forEach(function(b){
       if (b.dataset.mode === state.mode){
-        b.style.background = "#D9736A";
+        b.style.background = "#D9635A";
         b.style.color = "#1B1B1B";
       } else if (dark){
         b.style.background = "#3C3C3C";
@@ -688,28 +732,34 @@
     ctx.beginPath(); ctx.ellipse(45, 85, 25, 15, 0, 0, Math.PI); ctx.stroke();
   }
 
-  mainChar.addEventListener("click", function(){
-    if (mainChar.textContent !== "あ") return;
-    if (state.strokesVisible){ clearStrokeCanvas(); } else { drawStrokes(); }
-    state.strokesVisible = !state.strokesVisible;
-  });
-
-  goBtn.addEventListener("click", showCharacterBasedOnSelection);
-
-  showBtn.addEventListener("click", function(){
+  // Shared by the visible Show button and the hidden character-click trigger.
+  function toggleShowExtra(){
     if (state.showExtra){
       resetExtraCharacters();
     } else {
       displayFlankingCharacters(mainChar.textContent);
     }
     state.showExtra = !state.showExtra;
+  }
+
+  mainChar.addEventListener("click", function(){
+    if (mainChar.textContent === "あ"){
+      if (state.strokesVisible){ clearStrokeCanvas(); } else { drawStrokes(); }
+      state.strokesVisible = !state.strokesVisible;
+    }
+    toggleShowExtra();
   });
+
+  goBtn.addEventListener("click", showCharacterBasedOnSelection);
+
+  showBtn.addEventListener("click", toggleShowExtra);
 
   function initPage4IfNeeded(){
     if (page4Initialized) return;
     page4Initialized = true;
     buildModeButtons();
     styleTrainerChrome();
+    setOptionsExpanded(false);
     state.mode = DEFAULT_MODE;
     state.currentIndex = 0;
     showCharacterBasedOnSelection();
