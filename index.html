@@ -381,7 +381,8 @@
         <div class="options-panel-inner">
           <div class="bottom-row">
             <select id="sequenceSelect">
-              <option value="Random">Random</option>
+              <option value="SRS">Spaced Repetition System (SRS)</option>
+              <option value="Random" selected>Random</option>
               <option value="Continue Gojūon Order">Continue Gojūon Order</option>
               <option value="Start from Gojūon Order">Start from Gojūon Order</option>
             </select>
@@ -700,19 +701,26 @@
     var set = CHAR_SETS[state.mode];
     var character = "";
     switch(option){
+      case "SRS":
+        // Placeholder until real per-character tracking exists: picks
+        // uniformly at random, same as "Random", until the SRS scheduler
+        // (biasing toward characters marked (batsu)) is built.
+        character = set[Math.floor(Math.random() * set.length)];
+        state.currentIndex = set.indexOf(character);
+        break;
       case "Random":
         character = set[Math.floor(Math.random() * set.length)];
         state.currentIndex = set.indexOf(character);
         break;
       case "Continue Gojūon Order":
+      case "Start from Gojūon Order":
+        // "Start" resets currentIndex to 0 the moment it's *selected* (see
+        // the sequenceSelect change handler) - from there it advances
+        // exactly like "Continue", rather than re-resetting to 0 on every
+        // single Go press (which was the bug: it never moved past index 0).
         if (state.currentIndex < 0 || state.currentIndex >= set.length) state.currentIndex = 0;
         character = set[state.currentIndex];
         state.currentIndex = (state.currentIndex + 1) % set.length;
-        break;
-      case "Start from Gojūon Order":
-        state.currentIndex = 0;
-        character = set[0];
-        state.currentIndex = 1 % set.length;
         break;
       default:
         character = set[Math.floor(Math.random() * set.length)];
@@ -766,8 +774,12 @@
     rightSideChar.textContent = rightText;
     leftSideChar.hidden = false;
     rightSideChar.hidden = false;
-    batsuBtn.classList.add("visible");
-    maruBtn.classList.add("visible");
+    // The know-it/don't-know-it marks only make sense for the SRS mode -
+    // for Random/Gojūon order they stay hidden even while the reveal shows.
+    if (sequenceSelect.value === "SRS"){
+      batsuBtn.classList.add("visible");
+      maruBtn.classList.add("visible");
+    }
     positionSideCharacters();
   }
 
@@ -850,6 +862,21 @@
   goBtn.addEventListener("click", showCharacterBasedOnSelection);
 
   showBtn.addEventListener("click", toggleShowExtra);
+
+  sequenceSelect.addEventListener("change", function(){
+    if (sequenceSelect.value === "Start from Gojūon Order"){
+      state.currentIndex = 0;
+    }
+    // Keep the marks in sync even if the dropdown is changed mid-reveal
+    // (without pressing Go), in either direction.
+    if (sequenceSelect.value === "SRS" && state.showExtra){
+      batsuBtn.classList.add("visible");
+      maruBtn.classList.add("visible");
+    } else {
+      batsuBtn.classList.remove("visible");
+      maruBtn.classList.remove("visible");
+    }
+  });
 
   // Placeholder for now: just lets the user mark a character as known/unknown.
   // Tracking per-character stats and biasing "Random" toward missed characters
