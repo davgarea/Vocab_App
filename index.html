@@ -65,7 +65,7 @@
     opacity:0; transition:opacity .4s ease;
   }
   .user-icon.visible{ opacity:1; }
-  .user-icon svg{ width:16px; height:16px; display:block; }
+  .user-icon svg{ width:20px; height:20px; display:block; }
   .steps{
     display:flex; gap:3px;
     opacity:0;
@@ -197,12 +197,25 @@
   }
   .side-char{
     top:50%; transform:translateY(-50%);
-    font-size:clamp(46px,14vw,72px);
+    font-size:clamp(40px,12.5vw,60px);
     opacity:.75;
   }
   .main-char.font-mincho, .side-char.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN',serif; }
   .side-char[hidden]{ display:none; }
   .go-btn{ font-family:var(--font-display); font-weight:700; font-size:16px; padding:9px 30px; border-radius:9px; border:none; cursor:pointer; }
+  .answer-row{ display:flex; align-items:center; gap:14px; }
+  .mark-btn{
+    width:34px; height:34px; border-radius:50%; border:1.5px solid var(--border);
+    background:transparent; color:var(--ink-muted);
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer;
+    visibility:hidden; opacity:0; transition:opacity .2s ease, color .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .mark-btn svg{ width:15px; height:15px; display:block; }
+  .mark-btn.visible{ visibility:visible; opacity:1; }
+  .mark-btn:active{ transform:scale(.9); }
+  .mark-btn.batsu:hover{ color:#C0463C; border-color:#C0463C; }
+  .mark-btn.maru:hover{ color:#4C8C6B; border-color:#4C8C6B; }
+  .trainer-stage.th-dark .mark-btn{ border-color:#4A4A4A; color:#B8B8B8; }
   .trainer-stage.th-light{ background:#FFFFFF; }
   .trainer-stage.th-light .main-char, .trainer-stage.th-light .side-char{ color:#000000; }
   .trainer-stage.th-dark{ background:#2B2B2B; }
@@ -339,7 +352,19 @@
             <span class="main-char" id="mainChar">&nbsp;</span>
             <span class="side-char" id="rightSideChar" hidden></span>
           </div>
-          <button class="go-btn" id="goBtn">Go</button>
+          <div class="answer-row">
+            <button class="mark-btn batsu" id="batsuBtn" type="button" aria-label="Don't know this yet">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button class="go-btn" id="goBtn">Go</button>
+            <button class="mark-btn maru" id="maruBtn" type="button" aria-label="I know this">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="8" cy="8" r="5.6" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </button>
+          </div>
         </div>
         <button class="options-toggle" id="optionsToggle" type="button" aria-expanded="false" aria-label="More options">
           <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -579,6 +604,8 @@
   var leftSideChar = $("leftSideChar");
   var rightSideChar = $("rightSideChar");
   var goBtn = $("goBtn");
+  var batsuBtn = $("batsuBtn");
+  var maruBtn = $("maruBtn");
   var sequenceSelect = $("sequenceSelect");
   var showBtn = $("showBtn");
   var strokeCanvas = $("strokeCanvas");
@@ -696,6 +723,8 @@
     rightSideChar.hidden = true;
     leftSideChar.textContent = "";
     rightSideChar.textContent = "";
+    batsuBtn.classList.remove("visible");
+    maruBtn.classList.remove("visible");
   }
 
   // Which character sets flank each mode's main character, and on which side.
@@ -720,6 +749,8 @@
     rightSideChar.textContent = rightText;
     leftSideChar.hidden = false;
     rightSideChar.hidden = false;
+    batsuBtn.classList.add("visible");
+    maruBtn.classList.add("visible");
     positionSideCharacters();
   }
 
@@ -779,6 +810,16 @@
   goBtn.addEventListener("click", showCharacterBasedOnSelection);
 
   showBtn.addEventListener("click", toggleShowExtra);
+
+  // Placeholder for now: just lets the user mark a character as known/unknown.
+  // Tracking per-character stats and biasing "Random" toward missed characters
+  // is a future feature (tied to an upcoming study-mode option).
+  batsuBtn.addEventListener("click", function(){
+    console.log("Marked as don't-know-yet:", mainChar.textContent);
+  });
+  maruBtn.addEventListener("click", function(){
+    console.log("Marked as know-it:", mainChar.textContent);
+  });
 
   function initPage4IfNeeded(){
     if (page4Initialized) return;
