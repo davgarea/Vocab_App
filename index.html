@@ -292,9 +292,9 @@
       <div class="trainer-stage th-light" id="trainerStage">
         <canvas id="strokeCanvas" width="100" height="100"></canvas>
         <div class="char-stage" id="charStage">
-          <span class="side-char" id="leftRomaji" hidden></span>
+          <span class="side-char" id="leftSideChar" hidden></span>
           <span class="main-char" id="mainChar">&nbsp;</span>
-          <span class="side-char" id="rightKatakana" hidden></span>
+          <span class="side-char" id="rightSideChar" hidden></span>
         </div>
         <button class="go-btn" id="goBtn">Go</button>
       </div>
@@ -498,8 +498,8 @@
   var trainerStage = $("trainerStage");
   var charStage = $("charStage");
   var mainChar = $("mainChar");
-  var leftRomaji = $("leftRomaji");
-  var rightKatakana = $("rightKatakana");
+  var leftSideChar = $("leftSideChar");
+  var rightSideChar = $("rightSideChar");
   var goBtn = $("goBtn");
   var sequenceSelect = $("sequenceSelect");
   var showBtn = $("showBtn");
@@ -550,8 +550,8 @@
     sequenceSelect.style.color = dark ? "#FFFFFF" : "#000000";
     sequenceSelect.style.borderColor = dark ? "#3C3C3C" : "#D3D3D3";
     mainChar.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
-    leftRomaji.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
-    rightKatakana.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
+    leftSideChar.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
+    rightSideChar.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
   }
 
   function setMode(mode){
@@ -601,21 +601,36 @@
   }
 
   function resetExtraCharacters(){
-    leftRomaji.hidden = true;
-    rightKatakana.hidden = true;
-    leftRomaji.textContent = "";
-    rightKatakana.textContent = "";
+    leftSideChar.hidden = true;
+    rightSideChar.hidden = true;
+    leftSideChar.textContent = "";
+    rightSideChar.textContent = "";
   }
 
-  function displayAdditionalCharactersForHiragana(current){
+  // Which character sets flank each mode's main character, and on which side.
+  // Katakana/Hiragana are kept adjacent to each other (visually the two most
+  // similar scripts), with Romaji taking whichever side is left over.
+  var FLANKS = {
+    Hiragana: { left: "Romaji",   right: "Katakana" },
+    Romaji:   { left: "Hiragana", right: "Katakana" },
+    Katakana: { left: "Hiragana", right: "Romaji" }
+  };
+
+  function displayFlankingCharacters(current){
     if (!current) return;
-    var idx = CHAR_SETS.Hiragana.indexOf(current);
-    var romaji = idx !== -1 ? CHAR_SETS.Romaji[idx] : "";
-    var katakana = idx !== -1 ? CHAR_SETS.Katakana[idx] : "";
-    leftRomaji.textContent = romaji;
-    rightKatakana.textContent = katakana;
-    leftRomaji.hidden = false;
-    rightKatakana.hidden = false;
+    var flank = FLANKS[state.mode];
+    var leftText = "", rightText = "";
+    if (flank){
+      var idx = CHAR_SETS[state.mode].indexOf(current);
+      if (idx !== -1){
+        leftText = CHAR_SETS[flank.left][idx];
+        rightText = CHAR_SETS[flank.right][idx];
+      }
+    }
+    leftSideChar.textContent = leftText;
+    rightSideChar.textContent = rightText;
+    leftSideChar.hidden = false;
+    rightSideChar.hidden = false;
     positionSideCharacters();
   }
 
@@ -623,19 +638,19 @@
   // border and the gap to the main character are exactly equal (measured from
   // actual rendered glyph widths, since character widths vary by font/text).
   function positionSideCharacters(){
-    if (leftRomaji.hidden || rightKatakana.hidden) return;
+    if (leftSideChar.hidden || rightSideChar.hidden) return;
     var containerWidth = charStage.clientWidth;
     var mainWidth = mainChar.offsetWidth;
     var sideRegion = (containerWidth - mainWidth) / 2; // space available on each side of the main char
 
-    var lw = leftRomaji.offsetWidth;
+    var lw = leftSideChar.offsetWidth;
     var gapLeft = Math.max(0, (sideRegion - lw) / 2);
-    leftRomaji.style.left = gapLeft + "px";
+    leftSideChar.style.left = gapLeft + "px";
 
-    var rw = rightKatakana.offsetWidth;
+    var rw = rightSideChar.offsetWidth;
     var gapRight = Math.max(0, (sideRegion - rw) / 2);
     var mainRightEdge = containerWidth - sideRegion;
-    rightKatakana.style.left = (mainRightEdge + gapRight) + "px";
+    rightSideChar.style.left = (mainRightEdge + gapRight) + "px";
   }
 
   window.addEventListener("resize", positionSideCharacters);
@@ -666,7 +681,7 @@
     if (state.showExtra){
       resetExtraCharacters();
     } else {
-      displayAdditionalCharactersForHiragana(mainChar.textContent);
+      displayFlankingCharacters(mainChar.textContent);
     }
     state.showExtra = !state.showExtra;
   });
