@@ -10,8 +10,8 @@
     --ink:#22241E;
     --ink-muted:#6C7062;
     --border:#DEE1D3;
-    --accent:#A83232;
-    --accent-ink:#FFFFFF;
+    --accent:#D9736A;
+    --accent-ink:#1B1B1B;
     --accent-soft:#F2E0DE;
     --shadow: 0 1px 2px rgba(30,32,26,0.07), 0 10px 26px -14px rgba(30,32,26,0.22);
     --font-display:'Zen Maru Gothic','Hiragino Maru Gothic ProN','Yu Gothic',sans-serif;
@@ -546,8 +546,8 @@
     var dark = isDark();
     modeButtonsEl.querySelectorAll(".mode-btn").forEach(function(b){
       if (b.dataset.mode === state.mode){
-        b.style.background = "#A83232";
-        b.style.color = "#FFFFFF";
+        b.style.background = "#D9736A";
+        b.style.color = "#1B1B1B";
       } else if (dark){
         b.style.background = "#3C3C3C";
         b.style.color = "#FFFFFF";
