@@ -216,7 +216,7 @@
   <div class="topbar">
     <div class="wordmark">Charlin<span>GO</span></div>
     <div class="steps" id="steps">
-      <i data-i="0"></i><i data-i="1"></i>
+      <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i>
     </div>
   </div>
 
@@ -350,10 +350,10 @@
   // ---------- Step / page navigation ----------
   var PAGES = ["page0","page1","page2","page3","page4"];
 
-  // Language select (page0) is a one-time "installer" screen, and the Main
-  // Menu (page1) is just a hub - neither is part of a step-by-step flow, so
-  // no dots show there. Dots only track the actual course setup sequence.
-  var DOT_PAGES = ["page2","page3"];
+  // Language select (page0) is a one-time "installer" screen, so it gets no
+  // dot. Dots start from the Main Menu (the app's real second screen) and
+  // track the rest of the flow: Main Menu, Course Setup, Display Settings.
+  var DOT_PAGES = ["page1","page2","page3"];
 
   function updateSteps(){
     var stepsEl = $("steps");
