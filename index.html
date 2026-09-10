@@ -59,7 +59,12 @@
     font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:.01em;
   }
   .wordmark span{ color:var(--accent); }
-  .steps{ display:flex; gap:6px; }
+  .steps{
+    display:flex; gap:6px;
+    transition:transform .55s cubic-bezier(.4,0,.2,1);
+    transform:rotate(0deg);
+  }
+  .steps.vertical{ transform:rotate(90deg); }
   .steps i{
     width:7px; height:7px; border-radius:50%; background:var(--border); display:block;
     transition:background .25s ease, transform .25s ease;
@@ -205,7 +210,7 @@
   <div class="topbar">
     <div class="wordmark">Charlin<span>GO</span></div>
     <div class="steps" id="steps">
-      <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i><i data-i="3"></i><i data-i="4"></i>
+      <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i><i data-i="3"></i>
     </div>
   </div>
 
@@ -340,11 +345,13 @@
   var PAGES = ["page0","page1","page2","page3","page4"];
 
   function updateSteps(){
+    var onMainPage = state.step >= PAGES.indexOf("page4");
     document.querySelectorAll("#steps i").forEach(function(dot){
       var i = Number(dot.getAttribute("data-i"));
-      dot.classList.toggle("done", i < state.step);
-      dot.classList.toggle("now", i === state.step);
+      dot.classList.toggle("done", onMainPage || i < state.step);
+      dot.classList.toggle("now", !onMainPage && i === state.step);
     });
+    $("steps").classList.toggle("vertical", onMainPage);
   }
 
   function currentTheme(){
@@ -608,12 +615,10 @@
   }
 
   // Which character sets flank each mode's main character, and on which side.
-  // Katakana/Hiragana are kept adjacent to each other (visually the two most
-  // similar scripts), with Romaji taking whichever side is left over.
   var FLANKS = {
     Hiragana: { left: "Romaji",   right: "Katakana" },
     Romaji:   { left: "Hiragana", right: "Katakana" },
-    Katakana: { left: "Hiragana", right: "Romaji" }
+    Katakana: { left: "Romaji",   right: "Hiragana" }
   };
 
   function displayFlankingCharacters(current){
