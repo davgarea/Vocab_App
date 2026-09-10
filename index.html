@@ -20,22 +20,23 @@
   }
   /* --accent/--accent-ink/--accent-soft deliberately stay fixed across every
      theme - this brand red must always render identically everywhere (logo,
-     buttons, dots, and the trainer page's selected mode tab). */
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#16170F;
-      --surface:#1E2019;
-      --surface-2:#242620;
-      --ink:#ECEEE3;
-      --ink-muted:#9A9E8D;
-      --border:#33362B;
-      --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 30px -16px rgba(0,0,0,.65);
-    }
-  }
-  :root[data-theme="dark"]{
+     buttons, dots, and the trainer page's selected mode tab).
+
+     The shell's theme deliberately does NOT follow the browser/OS light-dark
+     preference - this artifact is a clone of a real desktop app that had its
+     own single Light/Dark/LBL setting governing the whole window, so the
+     app's own setting (picked on the Display Settings page) drives the
+     whole shell here too, via these classes on <html>. Default (no class)
+     is Light Mode, matching the original app's own default. */
+  :root.app-theme-dark{
     --bg:#16170F; --surface:#1E2019; --surface-2:#242620; --ink:#ECEEE3; --ink-muted:#9A9E8D;
     --border:#33362B;
     --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 30px -16px rgba(0,0,0,.65);
+  }
+  :root.app-theme-lbl{
+    --bg:#FFEBCD; --surface:#FFF3DE; --surface-2:#FFEFD4; --ink:#5A5A5A; --ink-muted:#8A7C68;
+    --border:#E8D2AE;
+    --shadow: 0 1px 2px rgba(90,70,30,.08), 0 10px 26px -14px rgba(90,70,30,.22);
   }
 
   *{ box-sizing:border-box; }
@@ -202,9 +203,13 @@
   }
   .main-char.font-mincho, .side-char.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN',serif; }
   .side-char[hidden]{ display:none; }
-  .go-btn{ font-family:var(--font-display); font-weight:700; font-size:16px; padding:9px 30px; border-radius:9px; border:none; cursor:pointer; }
-  .answer-row{ display:flex; align-items:center; gap:14px; }
+  .answer-row{ position:relative; width:100%; height:38px; }
+  .go-btn{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    font-family:var(--font-display); font-weight:700; font-size:16px; padding:9px 30px; border-radius:9px; border:none; cursor:pointer;
+  }
   .mark-btn{
+    position:absolute; top:50%; transform:translateY(-50%);
     width:34px; height:34px; border-radius:50%; border:1.5px solid var(--border);
     background:transparent; color:var(--ink-muted);
     display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer;
@@ -352,7 +357,7 @@
             <span class="main-char" id="mainChar">&nbsp;</span>
             <span class="side-char" id="rightSideChar" hidden></span>
           </div>
-          <div class="answer-row">
+          <div class="answer-row" id="answerRow">
             <button class="mark-btn batsu" id="batsuBtn" type="button" aria-label="Don't know this yet">
               <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -572,6 +577,16 @@
     else simPanel.classList.add("sim-light");
   }
 
+  // Drives the whole shell (not just the trainer page) from the app's own
+  // theme setting, since this clone has one window-wide theme like the
+  // original desktop app did.
+  function applyShellTheme(theme){
+    var root = document.documentElement;
+    root.classList.remove("app-theme-dark", "app-theme-lbl");
+    if (theme === "Dark Mode") root.classList.add("app-theme-dark");
+    else if (theme === "LBL Mode") root.classList.add("app-theme-lbl");
+  }
+
   themeSelect.addEventListener("change", function(){
     var theme = themeSelect.value;
     state.theme = theme;
@@ -585,6 +600,7 @@
       page3Continue.disabled = false;
     }
     applySimTheme(theme);
+    applyShellTheme(theme);
   });
 
   fontSelect.addEventListener("change", function(){
@@ -603,6 +619,7 @@
   var mainChar = $("mainChar");
   var leftSideChar = $("leftSideChar");
   var rightSideChar = $("rightSideChar");
+  var answerRow = $("answerRow");
   var goBtn = $("goBtn");
   var batsuBtn = $("batsuBtn");
   var maruBtn = $("maruBtn");
@@ -775,6 +792,29 @@
 
   window.addEventListener("resize", positionSideCharacters);
 
+  // Mirrors positionSideCharacters(): batsu/maru sit at the midpoint between
+  // the border and Go on each side, and match Go's own height so they read
+  // as sitting on the same line as it.
+  function positionAnswerRow(){
+    var containerWidth = answerRow.clientWidth;
+    var goHeight = goBtn.offsetHeight;
+    var goWidth = goBtn.offsetWidth;
+
+    batsuBtn.style.width = goHeight + "px";
+    batsuBtn.style.height = goHeight + "px";
+    maruBtn.style.width = goHeight + "px";
+    maruBtn.style.height = goHeight + "px";
+    answerRow.style.height = goHeight + "px";
+
+    var sideRegion = (containerWidth - goWidth) / 2;
+    var gap = Math.max(0, (sideRegion - goHeight) / 2);
+    batsuBtn.style.left = gap + "px";
+    var goRightEdge = containerWidth - sideRegion;
+    maruBtn.style.left = (goRightEdge + gap) + "px";
+  }
+
+  window.addEventListener("resize", positionAnswerRow);
+
   function clearStrokeCanvas(){
     var ctx = strokeCanvas.getContext("2d");
     ctx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
@@ -827,6 +867,7 @@
     buildModeButtons();
     styleTrainerChrome();
     setOptionsExpanded(false);
+    positionAnswerRow();
     state.mode = DEFAULT_MODE;
     state.currentIndex = 0;
     showCharacterBasedOnSelection();
