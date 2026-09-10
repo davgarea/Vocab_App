@@ -1,0 +1,694 @@
+<meta charset="UTF-8">
+<title>CharlinGO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#F2F4EC;
+    --surface:#FFFFFF;
+    --surface-2:#FBFAF6;
+    --ink:#22241E;
+    --ink-muted:#6C7062;
+    --border:#DEE1D3;
+    --accent:#A83232;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#F2E0DE;
+    --shadow: 0 1px 2px rgba(30,32,26,0.07), 0 10px 26px -14px rgba(30,32,26,0.22);
+    --font-display:'Zen Maru Gothic','Hiragino Maru Gothic ProN','Yu Gothic',sans-serif;
+    --font-body:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+    --radius:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16170F;
+      --surface:#1E2019;
+      --surface-2:#242620;
+      --ink:#ECEEE3;
+      --ink-muted:#9A9E8D;
+      --border:#33362B;
+      --accent:#D9736A;
+      --accent-ink:#1B1B1B;
+      --accent-soft:#3A2521;
+      --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 30px -16px rgba(0,0,0,.65);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16170F; --surface:#1E2019; --surface-2:#242620; --ink:#ECEEE3; --ink-muted:#9A9E8D;
+    --border:#33362B; --accent:#D9736A; --accent-ink:#1B1B1B; --accent-soft:#3A2521;
+    --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 30px -16px rgba(0,0,0,.65);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 60px;
+  }
+  .shell{ width:100%; max-width:460px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:2px 4px 18px;
+  }
+  .wordmark{
+    font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:.01em;
+  }
+  .wordmark span{ color:var(--accent); }
+  .steps{ display:flex; gap:6px; }
+  .steps i{
+    width:7px; height:7px; border-radius:50%; background:var(--border); display:block;
+    transition:background .25s ease, transform .25s ease;
+  }
+  .steps i.done{ background:var(--accent); }
+  .steps i.now{ background:var(--accent); transform:scale(1.3); }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:30px 26px 26px;
+  }
+
+  .page{ display:none; flex-direction:column; gap:16px; }
+  .page.active{ display:flex; }
+  .page.fade-out{ animation:fadeOut .5s ease forwards; }
+  .page.fade-in{ animation:fadeIn .5s ease forwards; }
+  @keyframes fadeOut{ from{opacity:1;} to{opacity:0;} }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @media (prefers-reduced-motion: reduce){
+    .page.fade-out, .page.fade-in{ animation:none; }
+  }
+
+  h1.page-title{
+    font-family:var(--font-display); font-weight:700; font-size:22px; margin:0;
+    text-wrap:balance;
+  }
+  p.copy{ margin:0; color:var(--ink-muted); font-size:14.5px; line-height:1.55; white-space:pre-line; }
+  p.copy.notice{ color:var(--accent); }
+
+  label.field-label{ font-size:13px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.04em; }
+
+  select, input[type="text"]{
+    width:100%;
+    font-family:var(--font-body);
+    font-size:15px;
+    padding:11px 13px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--ink);
+  }
+  select:focus, input[type="text"]:focus, button:focus-visible{
+    outline:2px solid var(--accent); outline-offset:1px;
+  }
+
+  .btn{
+    font-family:var(--font-display); font-weight:600; font-size:15px;
+    padding:12px 16px; border-radius:10px; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--ink); cursor:pointer;
+    transition:background .15s ease, transform .05s ease;
+  }
+  .btn:hover:not(:disabled){ background:var(--accent-soft); border-color:var(--accent); }
+  .btn:active:not(:disabled){ transform:scale(.98); }
+  .btn:disabled{ opacity:.42; cursor:not-allowed; }
+  .btn-primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn-primary:hover:not(:disabled){ filter:brightness(1.06); background:var(--accent); }
+
+  .menu-buttons{ display:flex; flex-direction:column; gap:10px; }
+  .menu-buttons .btn{ text-align:center; }
+
+  .field-with-icon{ position:relative; display:flex; align-items:center; }
+  .field-with-icon input{ padding-right:38px; }
+  .info-btn{
+    position:absolute; right:8px; width:22px; height:22px; border-radius:50%;
+    border:1px solid var(--border); background:var(--surface); color:var(--ink-muted);
+    font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-body); padding:0;
+  }
+  .tooltip-bubble{
+    display:none; position:absolute; top:calc(100% + 8px); right:0; width:250px;
+    background:var(--ink); color:var(--bg); font-size:12.5px; line-height:1.5;
+    padding:10px 12px; border-radius:10px; box-shadow:var(--shadow); z-index:5;
+  }
+  .tooltip-bubble.open{ display:block; }
+
+  small.hint{ color:var(--ink-muted); font-size:12px; }
+
+  /* --- Page 3: simulated app theming (independent of viewer theme) --- */
+  .sim-panel{ border-radius:12px; padding:22px 18px; display:flex; flex-direction:column; gap:14px; align-items:center; text-align:center; transition:background .2s ease; }
+  .sim-panel select{ max-width:220px; }
+  .sim-light{ background:#FFFFFF; }
+  .sim-light .sim-preview{ color:#000000; }
+  .sim-light .sim-text{ color:#22241E; }
+  .sim-dark{ background:#2B2B2B; }
+  .sim-dark .sim-preview{ color:#FFFFFF; }
+  .sim-dark .sim-text{ color:#FFFFFF; }
+  .sim-dark select{ background:#3C3C3C; color:#fff; border-color:#3C3C3C; }
+  .sim-lbl{ background:#FFEBCD; }
+  .sim-lbl .sim-preview{ color:#5A5A5A; }
+  .sim-lbl .sim-text{ color:#5A5A5A; }
+  .sim-preview{ font-size:38px; font-family:Arial, 'Hiragino Sans', sans-serif; }
+  .sim-preview.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN', serif; }
+  .sim-text{ font-size:14px; min-height:20px; }
+
+  /* --- Page 4: the character trainer --- */
+  #page4.page{ gap:0; }
+  .mode-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .mode-btn{
+    flex:1; padding:9px 4px; border-radius:9px; border:1px solid transparent;
+    font-family:var(--font-display); font-weight:600; font-size:13px; cursor:pointer;
+  }
+  .trainer-stage{
+    position:relative; border-radius:12px; padding:38px 16px 30px;
+    display:flex; flex-direction:column; align-items:center; gap:26px; overflow:hidden;
+    min-height:230px; justify-content:center;
+  }
+  #strokeCanvas{ position:absolute; top:8px; left:8px; pointer-events:none; }
+  .char-stage{ position:relative; width:100%; height:clamp(64px,20vw,100px); }
+  .main-char, .side-char{
+    position:absolute; top:50%;
+    font-family:Arial,'Hiragino Sans',sans-serif;
+    line-height:1; white-space:nowrap; user-select:none;
+  }
+  .main-char{
+    left:50%; transform:translate(-50%,-50%);
+    font-size:clamp(52px,16vw,80px);
+    cursor:pointer;
+  }
+  .side-char{
+    top:50%; transform:translateY(-50%);
+    font-size:clamp(46px,14vw,72px);
+    opacity:.75;
+  }
+  .main-char.font-mincho, .side-char.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN',serif; }
+  .side-char[hidden]{ display:none; }
+  .go-btn{ font-family:var(--font-display); font-weight:700; font-size:16px; padding:9px 30px; border-radius:9px; border:none; cursor:pointer; }
+  .trainer-stage.th-light{ background:#FFFFFF; }
+  .trainer-stage.th-light .main-char, .trainer-stage.th-light .side-char{ color:#000000; }
+  .trainer-stage.th-dark{ background:#2B2B2B; }
+  .trainer-stage.th-dark .main-char, .trainer-stage.th-dark .side-char{ color:#FFFFFF; }
+
+  .bottom-row{ display:flex; align-items:center; gap:10px; margin-top:16px; }
+  .bottom-row select{ flex:1; }
+  .show-btn{ font-family:var(--font-body); font-size:12px; padding:9px 16px; border-radius:8px; border:1px solid var(--border); cursor:pointer; white-space:nowrap; }
+
+  footer.credit{ text-align:center; margin-top:18px; font-size:11px; color:var(--ink-muted); }
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="wordmark">Charlin<span>GO</span></div>
+    <div class="steps" id="steps">
+      <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i><i data-i="3"></i><i data-i="4"></i>
+    </div>
+  </div>
+
+  <div class="card" id="cardWrap">
+    <!-- Page 0: Interface language -->
+    <section class="page active" id="page0">
+      <h1 class="page-title">Choose your interface language</h1>
+      <p class="copy" id="page0Message">Ignore this Page (This will be in the Installer)</p>
+      <select id="uiLangSelect">
+        <option value="English">🇬🇧 English</option>
+        <option value="Deutsch">🇩🇪 Deutsch</option>
+        <option value="Français">🇫🇷 Français</option>
+        <option value="Italiano">🇮🇹 Italiano</option>
+        <option value="Español">🇪🇸 Español</option>
+        <option value="Português">🇵🇹 Português</option>
+        <option value="Українська">🇺🇦 Українська</option>
+        <option value="中文">🇨🇳 中文</option>
+        <option value="日本語">🇯🇵 日本語</option>
+        <option value="한국어">🇰🇷 한국어</option>
+      </select>
+      <button class="btn btn-primary" id="page0Continue">Continue</button>
+    </section>
+
+    <!-- Page 1: Main menu -->
+    <section class="page" id="page1">
+      <h1 class="page-title">Welcome to CharlinGO</h1>
+      <div class="menu-buttons">
+        <button class="btn btn-primary" id="newCourseBtn">New Course</button>
+        <button class="btn" disabled>Load Course</button>
+        <button class="btn" disabled>Help / Support</button>
+        <button class="btn" disabled>How it Works</button>
+        <button class="btn" disabled>About the App</button>
+      </div>
+    </section>
+
+    <!-- Page 2: Learning language selection -->
+    <section class="page" id="page2">
+      <h1 class="page-title" style="font-size:18px;">Set up your course</h1>
+      <p class="copy" id="page2Message">Please select the language you want to study the characters</p>
+      <select id="learningLangSelect">
+        <option value="Japanese">🇯🇵 Japanese</option>
+        <option value="Korean">🇰🇷 Korean</option>
+        <option value="Chinese">🇨🇳 Chinese</option>
+      </select>
+      <div>
+        <label class="field-label" for="courseNameInput">Course name</label>
+        <div class="field-with-icon" style="margin-top:6px;">
+          <input type="text" id="courseNameInput" placeholder="My Japanese Study Course!">
+          <button type="button" class="info-btn" id="infoBtn" aria-label="What is this for?">i</button>
+          <div class="tooltip-bubble" id="infoTooltip">
+            Use this text box to name your set. Naming your set helps you organize your language
+            learning materials, making it easy to save, find, and load different sets. This is
+            especially useful if you're learning multiple languages or have separate sets for
+            different purposes or people.
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="page2Continue">Continue</button>
+    </section>
+
+    <!-- Page 3: Japanese section settings -->
+    <section class="page" id="page3">
+      <h1 class="page-title" style="font-size:18px;">Display settings</h1>
+      <p class="copy" id="page3Message" style="min-height:20px;"></p>
+      <div class="sim-panel sim-light" id="simPanel">
+        <select id="themeSelect">
+          <option value="Light Mode">Light Mode</option>
+          <option value="Dark Mode">Dark Mode</option>
+          <option value="LBL Mode">LBL Mode</option>
+        </select>
+        <select id="fontSelect">
+          <option value="Default Font">Default Font</option>
+          <option value="Yu Mincho Font">Yu Mincho Font</option>
+        </select>
+        <div class="sim-preview" id="previewLabel">a あ ア 私</div>
+      </div>
+      <small class="hint">LBL Mode = Low-Blue-Light Mode</small>
+      <button class="btn btn-primary" id="page3Continue">Continue</button>
+    </section>
+
+    <!-- Page 4: Character trainer -->
+    <section class="page" id="page4">
+      <div class="mode-row" id="modeButtons"></div>
+      <div class="trainer-stage th-light" id="trainerStage">
+        <canvas id="strokeCanvas" width="100" height="100"></canvas>
+        <div class="char-stage" id="charStage">
+          <span class="side-char" id="leftRomaji" hidden></span>
+          <span class="main-char" id="mainChar">&nbsp;</span>
+          <span class="side-char" id="rightKatakana" hidden></span>
+        </div>
+        <button class="go-btn" id="goBtn">Go</button>
+      </div>
+      <div class="bottom-row">
+        <select id="sequenceSelect">
+          <option value="Random">Random</option>
+          <option value="Continue Gojūon Order">Continue Gojūon Order</option>
+          <option value="Start from Gojūon Order">Start from Gojūon Order</option>
+        </select>
+        <button class="show-btn" id="showBtn">Show</button>
+      </div>
+    </section>
+  </div>
+  <footer class="credit">Tip: tap "あ" on the Hiragana screen to see a stroke hint.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CHAR_SETS = {
+    Romaji:   ["a","i","u","e","o","ka","ki","ku","ke","ko","sa","shi","su","se","so","ta","chi","tsu","te","to","na","ni","nu","ne","no","ha","hi","fu","he","ho","ma","mi","mu","me","mo","ya","yu","yo","ra","ri","ru","re","ro","wa","wo","n"],
+    Hiragana: ["あ","い","う","え","お","か","き","く","け","こ","さ","し","す","せ","そ","た","ち","つ","て","と","な","に","ぬ","ね","の","は","ひ","ふ","へ","ほ","ま","み","む","め","も","や","ゆ","よ","ら","り","る","れ","ろ","わ","を","ん"],
+    Katakana: ["ア","イ","ウ","エ","オ","カ","キ","ク","ケ","コ","サ","シ","ス","セ","ソ","タ","チ","ツ","テ","ト","ナ","ニ","ヌ","ネ","ノ","ハ","ヒ","フ","ヘ","ホ","マ","ミ","ム","メ","モ","ヤ","ユ","ヨ","ラ","リ","ル","レ","ロ","ワ","ヲ","ン"],
+    Kanji:    ["私","先生","学生","友達"]
+  };
+  var MODE_ORDER = ["Romaji","Hiragana","Katakana","Kanji"];
+  var DEFAULT_MODE = "Romaji";
+
+  var state = {
+    step: 0,
+    theme: "Light Mode",
+    font: "Default Font",
+    mode: DEFAULT_MODE,
+    currentIndex: 0,
+    showExtra: false,
+    strokesVisible: false
+  };
+
+  function $(id){ return document.getElementById(id); }
+
+  // ---------- Step / page navigation ----------
+  var PAGES = ["page0","page1","page2","page3","page4"];
+
+  function updateSteps(){
+    document.querySelectorAll("#steps i").forEach(function(dot){
+      var i = Number(dot.getAttribute("data-i"));
+      dot.classList.toggle("done", i < state.step);
+      dot.classList.toggle("now", i === state.step);
+    });
+  }
+
+  function currentTheme(){
+    return state.theme === "Dark Mode" ? "#2B2B2B" : (state.theme === "LBL Mode" ? "#FFEBCD" : "#FFFFFF");
+  }
+
+  function goTo(pageId, opts){
+    opts = opts || {};
+    var fade = !!opts.fade;
+    var current = document.querySelector(".page.active");
+    var target = $(pageId);
+    state.step = PAGES.indexOf(pageId);
+    updateSteps();
+
+    if (!fade || !current || current === target){
+      if (current) current.classList.remove("active");
+      target.classList.add("active");
+      afterShow(pageId);
+      return;
+    }
+
+    if (state.theme === "Dark Mode"){ document.body.style.background = "#2B2B2B"; }
+    current.classList.add("fade-out");
+    window.setTimeout(function(){
+      current.classList.remove("active","fade-out");
+      target.classList.add("active");
+      target.classList.add("fade-in");
+      window.setTimeout(function(){ target.classList.remove("fade-in"); }, 520);
+      afterShow(pageId);
+      if (state.theme !== "Dark Mode"){ document.body.style.background = ""; }
+    }, 500);
+  }
+
+  function afterShow(pageId){
+    if (pageId === "page4"){ initPage4IfNeeded(); }
+  }
+
+  // ---------- Page 0 ----------
+  var page0Message = $("page0Message");
+  var uiLangSelect = $("uiLangSelect");
+  var page0Continue = $("page0Continue");
+
+  uiLangSelect.addEventListener("change", function(){
+    if (uiLangSelect.value !== "English"){
+      page0Message.textContent = "This option is not available yet, but we are working on it :)";
+      page0Message.style.fontFamily = "Verdana, sans-serif";
+      page0Message.style.fontSize = "14px";
+      page0Message.classList.add("notice");
+      page0Continue.disabled = true;
+    } else {
+      page0Message.textContent = "Ignore this Page (This will be in the Installer)";
+      page0Message.style.fontFamily = "";
+      page0Message.style.fontSize = "";
+      page0Message.classList.remove("notice");
+      page0Continue.disabled = false;
+    }
+  });
+
+  page0Continue.addEventListener("click", function(){
+    goTo("page1"); // instant, matches original (no fade 0 -> 1)
+  });
+
+  // ---------- Page 1 ----------
+  $("newCourseBtn").addEventListener("click", function(){
+    goTo("page2", { fade:true });
+  });
+
+  // ---------- Page 2 ----------
+  var page2Message = $("page2Message");
+  var learningLangSelect = $("learningLangSelect");
+  var courseNameInput = $("courseNameInput");
+  var page2Continue = $("page2Continue");
+  var infoBtn = $("infoBtn");
+  var infoTooltip = $("infoTooltip");
+
+  var PLACEHOLDERS = {
+    Japanese: "My Japanese Study Course!",
+    Korean: "My Korean Study Course!",
+    Chinese: "My Chinese Study Course!"
+  };
+
+  learningLangSelect.addEventListener("change", function(){
+    var val = learningLangSelect.value;
+    courseNameInput.placeholder = PLACEHOLDERS[val] || PLACEHOLDERS.Japanese;
+    if (val !== "Japanese"){
+      page2Message.textContent = "This option is not available yet, but we are working on it :)";
+      page2Message.classList.add("notice");
+      page2Continue.disabled = true;
+    } else {
+      page2Message.textContent = "Please select the language you want to study the characters";
+      page2Message.classList.remove("notice");
+      page2Continue.disabled = false;
+    }
+  });
+
+  infoBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    infoTooltip.classList.toggle("open");
+  });
+  document.addEventListener("click", function(e){
+    if (!infoTooltip.contains(e.target) && e.target !== infoBtn){
+      infoTooltip.classList.remove("open");
+    }
+  });
+
+  page2Continue.addEventListener("click", function(){
+    goTo("page3", { fade:true });
+  });
+
+  // ---------- Page 3 ----------
+  var page3Message = $("page3Message");
+  var themeSelect = $("themeSelect");
+  var fontSelect = $("fontSelect");
+  var simPanel = $("simPanel");
+  var previewLabel = $("previewLabel");
+  var page3Continue = $("page3Continue");
+
+  function applySimTheme(theme){
+    simPanel.classList.remove("sim-light","sim-dark","sim-lbl");
+    if (theme === "Dark Mode") simPanel.classList.add("sim-dark");
+    else if (theme === "LBL Mode") simPanel.classList.add("sim-lbl");
+    else simPanel.classList.add("sim-light");
+  }
+
+  themeSelect.addEventListener("change", function(){
+    var theme = themeSelect.value;
+    state.theme = theme;
+    if (theme === "LBL Mode"){
+      page3Message.textContent = "This option is not available yet, but we are working on it :)";
+      page3Message.style.fontFamily = "Verdana, sans-serif";
+      page3Continue.disabled = true;
+    } else {
+      page3Message.textContent = "";
+      page3Message.style.fontFamily = "";
+      page3Continue.disabled = false;
+    }
+    applySimTheme(theme);
+  });
+
+  fontSelect.addEventListener("change", function(){
+    state.font = fontSelect.value;
+    previewLabel.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
+  });
+
+  page3Continue.addEventListener("click", function(){
+    goTo("page4", { fade:true });
+  });
+
+  // ---------- Page 4 ----------
+  var modeButtonsEl = $("modeButtons");
+  var trainerStage = $("trainerStage");
+  var charStage = $("charStage");
+  var mainChar = $("mainChar");
+  var leftRomaji = $("leftRomaji");
+  var rightKatakana = $("rightKatakana");
+  var goBtn = $("goBtn");
+  var sequenceSelect = $("sequenceSelect");
+  var showBtn = $("showBtn");
+  var strokeCanvas = $("strokeCanvas");
+  var page4Initialized = false;
+
+  function isDark(){ return state.theme === "Dark Mode"; }
+
+  function buildModeButtons(){
+    modeButtonsEl.innerHTML = "";
+    MODE_ORDER.forEach(function(mode){
+      var b = document.createElement("button");
+      b.className = "mode-btn";
+      b.textContent = mode;
+      b.dataset.mode = mode;
+      b.addEventListener("click", function(){ setMode(mode); });
+      modeButtonsEl.appendChild(b);
+    });
+    styleModeButtons();
+  }
+
+  function styleModeButtons(){
+    var dark = isDark();
+    modeButtonsEl.querySelectorAll(".mode-btn").forEach(function(b){
+      if (b.dataset.mode === state.mode){
+        b.style.background = "#A83232";
+        b.style.color = "#FFFFFF";
+      } else if (dark){
+        b.style.background = "#3C3C3C";
+        b.style.color = "#FFFFFF";
+      } else {
+        b.style.background = "#dae0e3";
+        b.style.color = "#000000";
+      }
+    });
+  }
+
+  function styleTrainerChrome(){
+    var dark = isDark();
+    trainerStage.classList.toggle("th-dark", dark);
+    trainerStage.classList.toggle("th-light", !dark);
+    goBtn.style.background = dark ? "#3C3C3C" : "#dae0e3";
+    goBtn.style.color = dark ? "#FFFFFF" : "#000000";
+    showBtn.style.background = dark ? "#3C3C3C" : "#FFFFFF";
+    showBtn.style.color = dark ? "#FFFFFF" : "#000000";
+    showBtn.style.borderColor = dark ? "#3C3C3C" : "#D3D3D3";
+    sequenceSelect.style.background = dark ? "#3C3C3C" : "#FFFFFF";
+    sequenceSelect.style.color = dark ? "#FFFFFF" : "#000000";
+    sequenceSelect.style.borderColor = dark ? "#3C3C3C" : "#D3D3D3";
+    mainChar.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
+    leftRomaji.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
+    rightKatakana.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
+  }
+
+  function setMode(mode){
+    state.mode = mode;
+    state.currentIndex = 0;
+    styleModeButtons();
+    showCharacterBasedOnSelection();
+  }
+
+  function getCharacterToShow(option){
+    var set = CHAR_SETS[state.mode];
+    var character = "";
+    switch(option){
+      case "Random":
+        character = set[Math.floor(Math.random() * set.length)];
+        state.currentIndex = set.indexOf(character);
+        break;
+      case "Continue Gojūon Order":
+        if (state.currentIndex < 0 || state.currentIndex >= set.length) state.currentIndex = 0;
+        character = set[state.currentIndex];
+        state.currentIndex = (state.currentIndex + 1) % set.length;
+        break;
+      case "Start from Gojūon Order":
+        state.currentIndex = 0;
+        character = set[0];
+        state.currentIndex = 1 % set.length;
+        break;
+      default:
+        character = set[Math.floor(Math.random() * set.length)];
+        state.currentIndex = set.indexOf(character);
+    }
+    return character;
+  }
+
+  function showCharacterBasedOnSelection(){
+    var character = getCharacterToShow(sequenceSelect.value);
+    setCharacter(character);
+  }
+
+  function setCharacter(character){
+    mainChar.textContent = character;
+    // onCharacterChanged: reset strokes + extra display
+    state.strokesVisible = false;
+    clearStrokeCanvas();
+    resetExtraCharacters();
+    state.showExtra = false;
+  }
+
+  function resetExtraCharacters(){
+    leftRomaji.hidden = true;
+    rightKatakana.hidden = true;
+    leftRomaji.textContent = "";
+    rightKatakana.textContent = "";
+  }
+
+  function displayAdditionalCharactersForHiragana(current){
+    if (!current) return;
+    var idx = CHAR_SETS.Hiragana.indexOf(current);
+    var romaji = idx !== -1 ? CHAR_SETS.Romaji[idx] : "";
+    var katakana = idx !== -1 ? CHAR_SETS.Katakana[idx] : "";
+    leftRomaji.textContent = romaji;
+    rightKatakana.textContent = katakana;
+    leftRomaji.hidden = false;
+    rightKatakana.hidden = false;
+    positionSideCharacters();
+  }
+
+  // Positions the Romaji/Katakana labels so that, on each side, the gap to the
+  // border and the gap to the main character are exactly equal (measured from
+  // actual rendered glyph widths, since character widths vary by font/text).
+  function positionSideCharacters(){
+    if (leftRomaji.hidden || rightKatakana.hidden) return;
+    var containerWidth = charStage.clientWidth;
+    var mainWidth = mainChar.offsetWidth;
+    var sideRegion = (containerWidth - mainWidth) / 2; // space available on each side of the main char
+
+    var lw = leftRomaji.offsetWidth;
+    var gapLeft = Math.max(0, (sideRegion - lw) / 2);
+    leftRomaji.style.left = gapLeft + "px";
+
+    var rw = rightKatakana.offsetWidth;
+    var gapRight = Math.max(0, (sideRegion - rw) / 2);
+    var mainRightEdge = containerWidth - sideRegion;
+    rightKatakana.style.left = (mainRightEdge + gapRight) + "px";
+  }
+
+  window.addEventListener("resize", positionSideCharacters);
+
+  function clearStrokeCanvas(){
+    var ctx = strokeCanvas.getContext("2d");
+    ctx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
+  }
+
+  function drawStrokes(){
+    var ctx = strokeCanvas.getContext("2d");
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(10,20); ctx.lineTo(50,20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(50,10); ctx.lineTo(30,60); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(45, 85, 25, 15, 0, 0, Math.PI); ctx.stroke();
+  }
+
+  mainChar.addEventListener("click", function(){
+    if (mainChar.textContent !== "あ") return;
+    if (state.strokesVisible){ clearStrokeCanvas(); } else { drawStrokes(); }
+    state.strokesVisible = !state.strokesVisible;
+  });
+
+  goBtn.addEventListener("click", showCharacterBasedOnSelection);
+
+  showBtn.addEventListener("click", function(){
+    if (state.showExtra){
+      resetExtraCharacters();
+    } else {
+      displayAdditionalCharactersForHiragana(mainChar.textContent);
+    }
+    state.showExtra = !state.showExtra;
+  });
+
+  function initPage4IfNeeded(){
+    if (page4Initialized) return;
+    page4Initialized = true;
+    buildModeButtons();
+    styleTrainerChrome();
+    state.mode = DEFAULT_MODE;
+    state.currentIndex = 0;
+    showCharacterBasedOnSelection();
+  }
+
+  // keep page4 chrome in sync if theme/font settings change after a visit
+  themeSelect.addEventListener("change", function(){
+    if (page4Initialized){ styleModeButtons(); styleTrainerChrome(); }
+  });
+  fontSelect.addEventListener("change", function(){
+    if (page4Initialized){ styleTrainerChrome(); positionSideCharacters(); }
+  });
+
+  updateSteps();
+})();
+</script>
