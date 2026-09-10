@@ -60,17 +60,23 @@
   }
   .wordmark span{ color:var(--accent); }
   .steps{
-    display:flex; gap:6px;
-    transition:transform .55s cubic-bezier(.4,0,.2,1);
+    display:flex; gap:5px;
+    opacity:0;
+    transition:transform .55s cubic-bezier(.4,0,.2,1), opacity .3s ease;
     transform:rotate(0deg);
   }
+  .steps.visible{ opacity:1; }
   .steps.vertical{ transform:rotate(90deg); }
   .steps i{
-    width:7px; height:7px; border-radius:50%; background:var(--border); display:block;
+    width:5px; height:5px; border-radius:50%; background:var(--border); display:block;
     transition:background .25s ease, transform .25s ease;
   }
   .steps i.done{ background:var(--accent); }
   .steps i.now{ background:var(--accent); transform:scale(1.3); }
+  /* On the main trainer page the dots stop being a progress indicator and
+     become a static, neutral "settings" style icon. */
+  .steps.settings-mode i.done{ background:var(--ink-muted); }
+  .steps.settings-mode i.now{ transform:none; }
 
   .card{
     background:var(--surface);
@@ -210,7 +216,7 @@
   <div class="topbar">
     <div class="wordmark">Charlin<span>GO</span></div>
     <div class="steps" id="steps">
-      <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i><i data-i="3"></i>
+      <i data-i="0"></i><i data-i="1"></i>
     </div>
   </div>
 
@@ -344,14 +350,26 @@
   // ---------- Step / page navigation ----------
   var PAGES = ["page0","page1","page2","page3","page4"];
 
+  // Language select (page0) is a one-time "installer" screen, and the Main
+  // Menu (page1) is just a hub - neither is part of a step-by-step flow, so
+  // no dots show there. Dots only track the actual course setup sequence.
+  var DOT_PAGES = ["page2","page3"];
+
   function updateSteps(){
-    var onMainPage = state.step >= PAGES.indexOf("page4");
+    var stepsEl = $("steps");
+    var pageId = PAGES[state.step];
+    var onMainPage = pageId === "page4";
+    var dotIndex = DOT_PAGES.indexOf(pageId);
+
+    stepsEl.classList.toggle("visible", onMainPage || dotIndex !== -1);
+    stepsEl.classList.toggle("vertical", onMainPage);
+    stepsEl.classList.toggle("settings-mode", onMainPage);
+
     document.querySelectorAll("#steps i").forEach(function(dot){
       var i = Number(dot.getAttribute("data-i"));
-      dot.classList.toggle("done", onMainPage || i < state.step);
-      dot.classList.toggle("now", !onMainPage && i === state.step);
+      dot.classList.toggle("done", onMainPage || (dotIndex !== -1 && i < dotIndex));
+      dot.classList.toggle("now", !onMainPage && i === dotIndex);
     });
-    $("steps").classList.toggle("vertical", onMainPage);
   }
 
   function currentTheme(){
