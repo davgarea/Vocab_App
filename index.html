@@ -59,6 +59,13 @@
     font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:.01em;
   }
   .wordmark span{ color:var(--accent); }
+  .topbar-right{ display:flex; align-items:center; gap:10px; }
+  .user-icon{
+    display:flex; color:var(--ink-muted);
+    opacity:0; transition:opacity .4s ease;
+  }
+  .user-icon.visible{ opacity:1; }
+  .user-icon svg{ width:16px; height:16px; display:block; }
   .steps{
     display:flex; gap:3px;
     opacity:0;
@@ -231,8 +238,16 @@
 <div class="shell">
   <div class="topbar">
     <div class="wordmark">Charlin<span>GO</span></div>
-    <div class="steps" id="steps">
-      <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i>
+    <div class="topbar-right">
+      <span class="user-icon" id="userIcon" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="5.4" r="2.6" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M2.8 13.4c1-2.7 3.1-4.1 5.2-4.1s4.2 1.4 5.2 4.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <div class="steps" id="steps">
+        <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i>
+      </div>
     </div>
   </div>
 
@@ -381,6 +396,7 @@
   // dot. Dots start from the Main Menu (the app's real second screen) and
   // track the rest of the flow: Main Menu, Course Setup, Display Settings.
   var DOT_PAGES = ["page1","page2","page3"];
+  var userIcon = $("userIcon");
 
   function updateSteps(){
     var stepsEl = $("steps");
@@ -397,6 +413,16 @@
       dot.classList.toggle("done", onMainPage || (dotIndex !== -1 && i < dotIndex));
       dot.classList.toggle("now", !onMainPage && i === dotIndex);
     });
+
+    if (onMainPage){
+      // Wait for the dots' flip-to-vertical transition (.55s) to finish
+      // before fading the user icon in next to them.
+      window.setTimeout(function(){
+        if (PAGES[state.step] === "page4") userIcon.classList.add("visible");
+      }, 550);
+    } else {
+      userIcon.classList.remove("visible");
+    }
   }
 
   function currentTheme(){
