@@ -61,12 +61,31 @@
   }
   .wordmark span{ color:var(--accent); }
   .topbar-right{ display:flex; align-items:center; gap:10px; }
+  .menu-anchor{ position:relative; }
   .user-icon{
     display:flex; color:var(--ink-muted);
-    opacity:0; transition:opacity .4s ease;
+    background:none; border:none; padding:0; margin:0;
+    opacity:0; pointer-events:none; cursor:pointer;
+    transition:opacity .4s ease, color .15s ease;
   }
-  .user-icon.visible{ opacity:1; }
+  .user-icon.visible{ opacity:1; pointer-events:auto; }
+  .user-icon:hover{ color:var(--accent); }
   .user-icon svg{ width:20px; height:20px; display:block; }
+  .steps-toggle{ display:flex; background:none; border:none; padding:0; margin:0; cursor:default; }
+  .steps-toggle:not(:disabled){ cursor:pointer; }
+  .popover-menu{
+    position:absolute; top:calc(100% + 10px); right:0; z-index:20;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    box-shadow:var(--shadow); padding:6px; min-width:180px;
+    display:flex; flex-direction:column; gap:1px;
+  }
+  .popover-menu[hidden]{ display:none; }
+  .popover-item{
+    display:block; width:100%; text-align:left; background:none; border:none;
+    padding:9px 10px; border-radius:7px; cursor:pointer;
+    font-family:var(--font-body); font-size:13.5px; color:var(--ink);
+  }
+  .popover-item:hover{ background:var(--accent-soft); }
   .steps{
     display:flex; gap:3px;
     opacity:0;
@@ -220,6 +239,8 @@
   .mark-btn:active{ transform:scale(.9); }
   .mark-btn.batsu:hover{ color:#C0463C; border-color:#C0463C; }
   .mark-btn.maru:hover{ color:#4C8C6B; border-color:#4C8C6B; }
+  .mark-btn.batsu.selected{ background:#C0463C; border-color:#C0463C; color:#FFFFFF; }
+  .mark-btn.maru.selected{ background:#4C8C6B; border-color:#4C8C6B; color:#FFFFFF; }
   .trainer-stage.th-dark .mark-btn{ border-color:#4A4A4A; color:#B8B8B8; }
   .trainer-stage.th-light{ background:#FBFAF6; }
   .trainer-stage.th-light .main-char, .trainer-stage.th-light .side-char{ color:#000000; }
@@ -257,14 +278,28 @@
   <div class="topbar">
     <div class="wordmark">Charlin<span>GO</span></div>
     <div class="topbar-right">
-      <span class="user-icon" id="userIcon" aria-hidden="true">
-        <svg viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="5.4" r="2.6" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M2.8 13.4c1-2.7 3.1-4.1 5.2-4.1s4.2 1.4 5.2 4.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <div class="steps" id="steps">
-        <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i>
+      <div class="menu-anchor">
+        <button class="user-icon" id="userIcon" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Account">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="5.4" r="2.6" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M2.8 13.4c1-2.7 3.1-4.1 5.2-4.1s4.2 1.4 5.2 4.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="popover-menu" id="userMenu" hidden>
+          <button class="popover-item" id="userMenuSettings" type="button">Settings</button>
+          <button class="popover-item" id="userMenuLogout" type="button">Log out</button>
+        </div>
+      </div>
+      <div class="menu-anchor">
+        <button class="steps-toggle" id="stepsToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="App menu" disabled>
+          <div class="steps" id="steps">
+            <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i>
+          </div>
+        </button>
+        <div class="popover-menu" id="stepsMenu" hidden>
+          <button class="popover-item" id="stepsMenuReset" type="button">Reset study progress</button>
+          <button class="popover-item" id="stepsMenuHelp" type="button">Help / Support</button>
+        </div>
       </div>
     </div>
   </div>
@@ -408,6 +443,58 @@
   var MODE_ORDER = ["Romaji","Hiragana","Katakana","Kanji"];
   var DEFAULT_MODE = "Romaji";
 
+  // ---------- SRS (spaced-repetition-ish) weighting ----------
+  // A minimal scheduler, not full SM-2/FSRS: each character has an integer
+  // weight (default 3). Marking (batsu) pushes it up (shown more often
+  // under SRS); marking (maru) pushes it down. Persisted in localStorage so
+  // it survives reloads - unlike the rest of this app's state, which
+  // intentionally resets every launch to match the original desktop app.
+  var SRS_STORAGE_KEY = "charlingo_srs_weights_v1";
+  var SRS_DEFAULT_WEIGHT = 3;
+  var SRS_MIN_WEIGHT = 1;
+  var SRS_MAX_WEIGHT = 8;
+
+  function loadSrsWeights(){
+    try {
+      var raw = localStorage.getItem(SRS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveSrsWeights(){
+    try { localStorage.setItem(SRS_STORAGE_KEY, JSON.stringify(srsWeights)); } catch (e) {}
+  }
+
+  var srsWeights = loadSrsWeights();
+
+  function srsKey(mode, character){ return mode + ":" + character; }
+
+  function getSrsWeight(mode, character){
+    var w = srsWeights[srsKey(mode, character)];
+    return (typeof w === "number") ? w : SRS_DEFAULT_WEIGHT;
+  }
+
+  function markSrs(mode, character, know){
+    var key = srsKey(mode, character);
+    var w = getSrsWeight(mode, character);
+    w = know ? (w - 1) : (w + 2);
+    w = Math.max(SRS_MIN_WEIGHT, Math.min(SRS_MAX_WEIGHT, w));
+    srsWeights[key] = w;
+    saveSrsWeights();
+  }
+
+  function pickSrsCharacter(mode, set){
+    var weights = set.map(function(c){ return getSrsWeight(mode, c); });
+    var total = weights.reduce(function(a, b){ return a + b; }, 0);
+    var r = Math.random() * total;
+    for (var i = 0; i < set.length; i++){
+      r -= weights[i];
+      if (r <= 0) return set[i];
+    }
+    return set[set.length - 1];
+  }
+
   var state = {
     step: 0,
     theme: "Light Mode",
@@ -428,6 +515,58 @@
   // track the rest of the flow: Main Menu, Course Setup, Display Settings.
   var DOT_PAGES = ["page1","page2","page3"];
   var userIcon = $("userIcon");
+  var userMenu = $("userMenu");
+  var stepsToggle = $("stepsToggle");
+  var stepsMenu = $("stepsMenu");
+
+  // ---------- Top bar popover menus ----------
+  function closeAllMenus(){
+    userMenu.hidden = true;
+    userIcon.setAttribute("aria-expanded", "false");
+    stepsMenu.hidden = true;
+    stepsToggle.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleMenu(button, menu){
+    var wasOpen = !menu.hidden;
+    closeAllMenus();
+    if (!wasOpen){
+      menu.hidden = false;
+      button.setAttribute("aria-expanded", "true");
+    }
+  }
+
+  userIcon.addEventListener("click", function(e){
+    e.stopPropagation();
+    toggleMenu(userIcon, userMenu);
+  });
+  stepsToggle.addEventListener("click", function(e){
+    e.stopPropagation();
+    if (stepsToggle.disabled) return;
+    toggleMenu(stepsToggle, stepsMenu);
+  });
+  document.addEventListener("click", closeAllMenus);
+  userMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+  stepsMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+
+  // Placeholders - not wired to real features yet.
+  $("userMenuSettings").addEventListener("click", function(){
+    console.log("Settings clicked (not implemented yet)");
+    closeAllMenus();
+  });
+  $("userMenuLogout").addEventListener("click", function(){
+    console.log("Log out clicked (not implemented yet)");
+    closeAllMenus();
+  });
+  $("stepsMenuHelp").addEventListener("click", function(){
+    console.log("Help / Support clicked (not implemented yet)");
+    closeAllMenus();
+  });
+  $("stepsMenuReset").addEventListener("click", function(){
+    srsWeights = {};
+    saveSrsWeights();
+    closeAllMenus();
+  });
 
   function updateSteps(){
     var stepsEl = $("steps");
@@ -454,6 +593,9 @@
     } else {
       userIcon.classList.remove("visible");
     }
+
+    stepsToggle.disabled = !onMainPage;
+    if (!onMainPage) closeAllMenus();
   }
 
   function currentTheme(){
@@ -702,10 +844,9 @@
     var character = "";
     switch(option){
       case "SRS":
-        // Placeholder until real per-character tracking exists: picks
-        // uniformly at random, same as "Random", until the SRS scheduler
-        // (biasing toward characters marked (batsu)) is built.
-        character = set[Math.floor(Math.random() * set.length)];
+        // Weighted by how often you've marked each character (batsu)
+        // vs (maru) - see pickSrsCharacter/markSrs above.
+        character = pickSrsCharacter(state.mode, set);
         state.currentIndex = set.indexOf(character);
         break;
       case "Random":
@@ -748,8 +889,8 @@
     rightSideChar.hidden = true;
     leftSideChar.textContent = "";
     rightSideChar.textContent = "";
-    batsuBtn.classList.remove("visible");
-    maruBtn.classList.remove("visible");
+    batsuBtn.classList.remove("visible", "selected");
+    maruBtn.classList.remove("visible", "selected");
   }
 
   // Which character sets flank each mode's main character, and on which side.
@@ -873,19 +1014,20 @@
       batsuBtn.classList.add("visible");
       maruBtn.classList.add("visible");
     } else {
-      batsuBtn.classList.remove("visible");
-      maruBtn.classList.remove("visible");
+      batsuBtn.classList.remove("visible", "selected");
+      maruBtn.classList.remove("visible", "selected");
     }
   });
 
-  // Placeholder for now: just lets the user mark a character as known/unknown.
-  // Tracking per-character stats and biasing "Random" toward missed characters
-  // is a future feature (tied to an upcoming study-mode option).
   batsuBtn.addEventListener("click", function(){
-    console.log("Marked as don't-know-yet:", mainChar.textContent);
+    batsuBtn.classList.add("selected");
+    maruBtn.classList.remove("selected");
+    markSrs(state.mode, mainChar.textContent, false);
   });
   maruBtn.addEventListener("click", function(){
-    console.log("Marked as know-it:", mainChar.textContent);
+    maruBtn.classList.add("selected");
+    batsuBtn.classList.remove("selected");
+    markSrs(state.mode, mainChar.textContent, true);
   });
 
   function initPage4IfNeeded(){
