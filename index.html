@@ -18,6 +18,9 @@
     --font-body:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
     --radius:16px;
   }
+  /* --accent/--accent-ink/--accent-soft deliberately stay fixed across every
+     theme - this brand red must always render identically everywhere (logo,
+     buttons, dots, and the trainer page's selected mode tab). */
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --bg:#16170F;
@@ -26,15 +29,12 @@
       --ink:#ECEEE3;
       --ink-muted:#9A9E8D;
       --border:#33362B;
-      --accent:#D9736A;
-      --accent-ink:#1B1B1B;
-      --accent-soft:#3A2521;
       --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 30px -16px rgba(0,0,0,.65);
     }
   }
   :root[data-theme="dark"]{
     --bg:#16170F; --surface:#1E2019; --surface-2:#242620; --ink:#ECEEE3; --ink-muted:#9A9E8D;
-    --border:#33362B; --accent:#D9736A; --accent-ink:#1B1B1B; --accent-soft:#3A2521;
+    --border:#33362B;
     --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 30px -16px rgba(0,0,0,.65);
   }
 
@@ -60,7 +60,7 @@
   }
   .wordmark span{ color:var(--accent); }
   .steps{
-    display:flex; gap:5px;
+    display:flex; gap:3px;
     opacity:0;
     transition:transform .55s cubic-bezier(.4,0,.2,1), opacity .3s ease;
     transform:rotate(0deg);
@@ -68,15 +68,11 @@
   .steps.visible{ opacity:1; }
   .steps.vertical{ transform:rotate(90deg); }
   .steps i{
-    width:5px; height:5px; border-radius:50%; background:var(--border); display:block;
+    width:3.5px; height:3.5px; border-radius:50%; background:var(--border); display:block;
     transition:background .25s ease, transform .25s ease;
   }
   .steps i.done{ background:var(--accent); }
   .steps i.now{ background:var(--accent); transform:scale(1.3); }
-  /* On the main trainer page the dots stop being a progress indicator and
-     become a static, neutral "settings" style icon. */
-  .steps.settings-mode i.done{ background:var(--ink-muted); }
-  .steps.settings-mode i.now{ transform:none; }
 
   .card{
     background:var(--surface);
