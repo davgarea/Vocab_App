@@ -1,0 +1,19 @@
+node_modules/
+*.log
+
+# Android
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/*.iml
+android/app/*.iml
+android/.idea/
+android/captures/
+android/local.properties
+
+# iOS (for when it's added)
+ios/App/Pods/
+ios/App/build/
+ios/App/DerivedData/
