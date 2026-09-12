@@ -191,6 +191,18 @@
   .sim-preview.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN', serif; }
   .sim-text{ font-size:14px; min-height:20px; }
 
+  .reveal-setting{ display:flex; flex-direction:column; gap:8px; width:100%; max-width:280px; margin:0 auto; }
+  .reveal-demo{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:12px;
+    padding:18px 14px; display:flex; align-items:center; justify-content:center; min-height:76px;
+  }
+  .reveal-demo-stage{ display:flex; align-items:center; justify-content:space-between; width:100%; }
+  .reveal-demo-side{ font-size:16px; color:var(--ink-muted); width:20px; text-align:center; font-family:Arial,'Hiragino Sans',sans-serif; }
+  .reveal-demo-main{ font-size:30px; font-weight:600; color:var(--ink); font-family:Arial,'Hiragino Sans',sans-serif; }
+  .reveal-demo-stage-below{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .reveal-demo-below-text{ font-size:14px; color:var(--ink-muted); font-family:Arial,'Hiragino Sans',sans-serif; }
+  .reveal-demo-stage[hidden], .reveal-demo-stage-below[hidden]{ display:none; }
+
   /* --- Page 4: the character trainer --- */
   #page4.page{ gap:0; }
   .mode-row{ display:flex; gap:8px; margin-bottom:14px; }
@@ -205,7 +217,12 @@
   }
   #strokeCanvas{ position:absolute; top:8px; left:8px; pointer-events:none; }
   .char-stage{ position:relative; width:100%; height:clamp(64px,20vw,100px); transition:height .15s ease; }
-  .char-stage.kanji-mode{ height:clamp(100px,28vw,148px); }
+  .char-stage.tall-stage{ height:clamp(100px,28vw,148px); }
+  .kanji-caption.reveal-below-large{
+    font-size:clamp(28px,9vw,44px); font-weight:600; opacity:1; line-height:1.2;
+    font-family:Arial,'Hiragino Sans',sans-serif;
+  }
+  .kanji-caption.reveal-below-large.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN',serif; }
   .main-char, .side-char{
     position:absolute; top:50%;
     font-family:Arial,'Hiragino Sans',sans-serif;
@@ -341,6 +358,16 @@
   .bottom-row select{ flex:1; }
   .show-btn{ font-family:var(--font-body); font-size:12px; padding:9px 16px; border-radius:8px; border:1px solid var(--border); cursor:pointer; white-space:nowrap; }
 
+  .reveal-scripts-row{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin-top:12px; padding-top:12px; border-top:1px solid var(--border);
+  }
+  .reveal-scripts-row[hidden]{ display:none; }
+  .reveal-scripts-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); }
+  .check-pill{ display:flex; align-items:center; gap:5px; font-size:12.5px; color:var(--ink); cursor:pointer; }
+  .check-pill input{ accent-color:var(--accent); width:14px; height:14px; cursor:pointer; margin:0; }
+  .check-pill.disabled{ opacity:.35; pointer-events:none; }
+
   footer.credit{ text-align:center; margin-top:18px; font-size:11px; color:var(--ink-muted); }
 </style>
 
@@ -448,6 +475,26 @@
         <div class="sim-preview" id="previewLabel">a あ ア 私</div>
       </div>
       <small class="hint">LBL Mode = Low-Blue-Light Mode</small>
+
+      <div class="reveal-setting">
+        <label class="field-label" for="revealStyleSelect">When you reveal the answer</label>
+        <select id="revealStyleSelect">
+          <option value="side">Side by side</option>
+          <option value="below">Below (like Anki)</option>
+        </select>
+        <div class="reveal-demo">
+          <div class="reveal-demo-stage" id="revealDemoSide">
+            <span class="reveal-demo-side">a</span>
+            <span class="reveal-demo-main">あ</span>
+            <span class="reveal-demo-side">ア</span>
+          </div>
+          <div class="reveal-demo-stage-below" id="revealDemoBelow" hidden>
+            <span class="reveal-demo-main">あ</span>
+            <div class="reveal-demo-below-text">a &nbsp;&middot;&nbsp; ア</div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn btn-primary" id="page3Continue">Continue</button>
     </section>
 
@@ -519,6 +566,12 @@
               <option value="Start from Gojūon Order">Start from Gojūon Order</option>
             </select>
             <button class="show-btn" id="showBtn">Show</button>
+          </div>
+          <div class="reveal-scripts-row" id="revealScriptsRow">
+            <span class="reveal-scripts-label">Show</span>
+            <label class="check-pill"><input type="checkbox" id="chkRomaji" data-script="Romaji" checked><span>Romaji</span></label>
+            <label class="check-pill"><input type="checkbox" id="chkHiragana" data-script="Hiragana" checked><span>Hiragana</span></label>
+            <label class="check-pill"><input type="checkbox" id="chkKatakana" data-script="Katakana" checked><span>Katakana</span></label>
           </div>
         </div>
       </div>
@@ -2873,7 +2926,9 @@
     mode: DEFAULT_MODE,
     currentIndex: 0,
     showExtra: false,
-    strokesVisible: false
+    strokesVisible: false,
+    revealStyle: "side", // "side" | "below" - chosen on the Display Settings page
+    revealScripts: { Romaji: true, Hiragana: true, Katakana: true } // which scripts to include in the reveal
   };
 
   function $(id){ return document.getElementById(id); }
@@ -3122,6 +3177,17 @@
     previewLabel.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
   });
 
+  // ---------- Reveal style preview (side-by-side vs below, like Anki) ----------
+  var revealStyleSelect = $("revealStyleSelect");
+  var revealDemoSide = $("revealDemoSide");
+  var revealDemoBelow = $("revealDemoBelow");
+
+  revealStyleSelect.addEventListener("change", function(){
+    state.revealStyle = revealStyleSelect.value;
+    revealDemoSide.hidden = state.revealStyle === "below";
+    revealDemoBelow.hidden = state.revealStyle !== "below";
+  });
+
   page3Continue.addEventListener("click", function(){
     goTo("page4", { fade:true });
   });
@@ -3151,6 +3217,7 @@
   var mapTitle = $("mapTitle");
   var mapGrid = $("mapGrid");
   var mapBackBtn = $("mapBackBtn");
+  var revealScriptsRow = $("revealScriptsRow");
   var page4Initialized = false;
   var optionsExpanded = false;
 
@@ -3210,6 +3277,7 @@
     mainChar.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
     leftSideChar.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
     rightSideChar.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
+    kanjiCaption.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
   }
 
   var seqOptionContinue = sequenceSelect.querySelector('option[value="Continue Gojūon Order"]');
@@ -3225,12 +3293,30 @@
     }
   }
 
+  var SCRIPT_CHECKS = { Romaji: $("chkRomaji"), Hiragana: $("chkHiragana"), Katakana: $("chkKatakana") };
+
+  function updateRevealScriptsRow(mode){
+    revealScriptsRow.hidden = mode === "Kanji";
+    Object.keys(SCRIPT_CHECKS).forEach(function(script){
+      var cb = SCRIPT_CHECKS[script];
+      var pill = cb.closest(".check-pill");
+      var isActiveMode = script === mode;
+      cb.disabled = isActiveMode;
+      pill.classList.toggle("disabled", isActiveMode);
+    });
+  }
+
+  function updateStageHeight(){
+    charStage.classList.toggle("tall-stage", state.mode === "Kanji" || state.revealStyle === "below");
+  }
+
   function setMode(mode){
     state.mode = mode;
     state.currentIndex = 0;
     styleModeButtons();
     jlptRow.hidden = mode !== "Kanji";
-    charStage.classList.toggle("kanji-mode", mode === "Kanji");
+    updateStageHeight();
+    updateRevealScriptsRow(mode);
     updateSequenceLabels(mode);
     showCharacterBasedOnSelection();
   }
@@ -3287,6 +3373,7 @@
     rightSideChar.textContent = "";
     kanjiCaption.hidden = true;
     kanjiCaption.innerHTML = "";
+    kanjiCaption.classList.remove("reveal-below-large");
     batsuBtn.classList.remove("visible", "selected");
     maruBtn.classList.remove("visible", "selected");
     mapToggle.classList.remove("visible");
@@ -3316,15 +3403,24 @@
       if (flank){
         var idx = getActiveSet(state.mode).indexOf(current);
         if (idx !== -1){
-          leftText = CHAR_SETS[flank.left][idx];
-          rightText = CHAR_SETS[flank.right][idx];
+          if (state.revealScripts[flank.left]) leftText = CHAR_SETS[flank.left][idx];
+          if (state.revealScripts[flank.right]) rightText = CHAR_SETS[flank.right][idx];
         }
       }
-      leftSideChar.textContent = leftText;
-      rightSideChar.textContent = rightText;
-      leftSideChar.hidden = false;
-      rightSideChar.hidden = false;
-      positionSideCharacters();
+      if (state.revealStyle === "below"){
+        var parts = [leftText, rightText].filter(function(t){ return t; });
+        if (parts.length){
+          kanjiCaption.classList.add("reveal-below-large");
+          kanjiCaption.textContent = parts.join(" · ");
+          kanjiCaption.hidden = false;
+        }
+      } else {
+        leftSideChar.textContent = leftText;
+        rightSideChar.textContent = rightText;
+        leftSideChar.hidden = !leftText;
+        rightSideChar.hidden = !rightText;
+        positionSideCharacters();
+      }
     }
     // The know-it/don't-know-it marks only make sense for the SRS mode -
     // for Random/Gojūon order they stay hidden even while the reveal shows.
@@ -3339,19 +3435,25 @@
   // border and the gap to the main character are exactly equal (measured from
   // actual rendered glyph widths, since character widths vary by font/text).
   function positionSideCharacters(){
-    if (leftSideChar.hidden || rightSideChar.hidden) return;
+    if (leftSideChar.hidden && rightSideChar.hidden) return;
     var containerWidth = charStage.clientWidth;
     var mainWidth = mainChar.offsetWidth;
     var sideRegion = (containerWidth - mainWidth) / 2; // space available on each side of the main char
 
-    var lw = leftSideChar.offsetWidth;
-    var gapLeft = Math.max(0, (sideRegion - lw) / 2);
-    leftSideChar.style.left = gapLeft + "px";
-
-    var rw = rightSideChar.offsetWidth;
-    var gapRight = Math.max(0, (sideRegion - rw) / 2);
-    var mainRightEdge = containerWidth - sideRegion;
-    rightSideChar.style.left = (mainRightEdge + gapRight) + "px";
+    // Positioned independently so either side can be shown alone (e.g. only
+    // one script checked in the reveal-scripts row) without the other's
+    // absence breaking the math.
+    if (!leftSideChar.hidden){
+      var lw = leftSideChar.offsetWidth;
+      var gapLeft = Math.max(0, (sideRegion - lw) / 2);
+      leftSideChar.style.left = gapLeft + "px";
+    }
+    if (!rightSideChar.hidden){
+      var rw = rightSideChar.offsetWidth;
+      var gapRight = Math.max(0, (sideRegion - rw) / 2);
+      var mainRightEdge = containerWidth - sideRegion;
+      rightSideChar.style.left = (mainRightEdge + gapRight) + "px";
+    }
   }
 
   window.addEventListener("resize", positionSideCharacters);
@@ -3428,6 +3530,14 @@
       batsuBtn.classList.remove("visible", "selected");
       maruBtn.classList.remove("visible", "selected");
     }
+  });
+
+  Object.keys(SCRIPT_CHECKS).forEach(function(script){
+    SCRIPT_CHECKS[script].addEventListener("change", function(e){
+      state.revealScripts[script] = e.target.checked;
+      // Live-update an already-open reveal rather than waiting for the next Go.
+      if (state.showExtra && state.mode !== "Kanji") displayFlankingCharacters(mainChar.textContent);
+    });
   });
 
   batsuBtn.addEventListener("click", function(){
@@ -3551,6 +3661,8 @@
     positionAnswerRow();
     state.mode = DEFAULT_MODE;
     state.currentIndex = 0;
+    updateStageHeight();
+    updateRevealScriptsRow(state.mode);
     updateSequenceLabels(state.mode);
     showCharacterBasedOnSelection();
   }
