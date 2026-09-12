@@ -13,6 +13,16 @@
     --accent:#D9635A;
     --accent-ink:#1B1B1B;
     --accent-soft:#F2E0DE;
+    /* One fixed identity color per script (not the brand accent, so it's
+       never confused with "selected"/accent meaning elsewhere), chosen to
+       sit well clear of both the accent red and the maru/batsu green -
+       loosely split-complementary in spirit (warm outlier + two cool,
+       related-but-distinct kana tones) rather than the literal formula,
+       since a strict complement of the red accent would land on green and
+       collide with the correct/incorrect marks. */
+    --script-romaji:#B8823C;
+    --script-hiragana:#3F8C82;
+    --script-katakana:#4472A8;
     --shadow: 0 1px 2px rgba(30,32,26,0.07), 0 10px 26px -14px rgba(30,32,26,0.22);
     --font-display:'Zen Maru Gothic','Hiragino Maru Gothic ProN','Yu Gothic',sans-serif;
     --font-body:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
@@ -201,6 +211,8 @@
   .reveal-demo-main{ font-size:30px; font-weight:600; color:var(--ink); font-family:Arial,'Hiragino Sans',sans-serif; }
   .reveal-demo-stage-below{ display:flex; flex-direction:column; align-items:center; gap:6px; }
   .reveal-demo-below-text{ font-size:14px; color:var(--ink-muted); font-family:Arial,'Hiragino Sans',sans-serif; }
+  .reveal-demo-side.script-romaji, .reveal-demo-below-text .script-romaji{ color:var(--script-romaji); }
+  .reveal-demo-side.script-katakana, .reveal-demo-below-text .script-katakana{ color:var(--script-katakana); }
   .reveal-demo-stage[hidden], .reveal-demo-stage-below[hidden]{ display:none; }
 
   /* --- Page 4: the character trainer --- */
@@ -217,7 +229,7 @@
   }
   #strokeCanvas{ position:absolute; top:8px; left:8px; pointer-events:none; }
   .char-stage{ position:relative; width:100%; height:clamp(64px,20vw,100px); transition:height .15s ease; }
-  .char-stage.tall-stage{ height:clamp(100px,28vw,148px); }
+  .char-stage.tall-stage{ height:clamp(128px,34vw,180px); }
   .kanji-caption.reveal-below-large{
     font-size:clamp(28px,9vw,44px); font-weight:600; opacity:1; line-height:1.2;
     font-family:Arial,'Hiragino Sans',sans-serif;
@@ -267,13 +279,28 @@
   .trainer-stage.th-light .tool-btn{ color:#000000; }
   .trainer-stage.th-dark .tool-btn{ color:#FFFFFF; }
 
+  /* Script identity colors win over the theme's plain black/white, and stay
+     fixed regardless of light/dark mode. */
+  .trainer-stage .side-char.script-romaji{ color:var(--script-romaji); opacity:.95; }
+  .trainer-stage .side-char.script-hiragana{ color:var(--script-hiragana); opacity:.95; }
+  .trainer-stage .side-char.script-katakana{ color:var(--script-katakana); opacity:.95; }
+  .kanji-caption .script-romaji{ color:var(--script-romaji); }
+  .kanji-caption .script-hiragana{ color:var(--script-hiragana); }
+  .kanji-caption .script-katakana{ color:var(--script-katakana); }
+  .kanji-caption .reveal-dot{ opacity:.55; }
+  /* Brightened variants for the dark trainer stage - the plain tokens above
+     don't have enough contrast against #2B2B2B to stay comfortably readable. */
+  .trainer-stage.th-dark .side-char.script-romaji, .trainer-stage.th-dark .kanji-caption .script-romaji{ color:#D9A662; }
+  .trainer-stage.th-dark .side-char.script-hiragana, .trainer-stage.th-dark .kanji-caption .script-hiragana{ color:#5FB3A8; }
+  .trainer-stage.th-dark .side-char.script-katakana, .trainer-stage.th-dark .kanji-caption .script-katakana{ color:#75A0D4; }
+
   .jlpt-row{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .jlpt-row[hidden]{ display:none; }
   .jlpt-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); white-space:nowrap; }
   .jlpt-row select{ flex:1; padding:8px 10px; font-size:13px; }
 
   .kanji-caption{
-    position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+    position:absolute; left:50%; bottom:6px; transform:translateX(-50%);
     width:96%; text-align:center; font-family:var(--font-body);
     font-size:11px; line-height:1.5; opacity:.82; pointer-events:none;
   }
@@ -480,17 +507,17 @@
         <label class="field-label" for="revealStyleSelect">When you reveal the answer</label>
         <select id="revealStyleSelect">
           <option value="side">Side by side</option>
-          <option value="below">Below (like Anki)</option>
+          <option value="below">Below</option>
         </select>
         <div class="reveal-demo">
           <div class="reveal-demo-stage" id="revealDemoSide">
-            <span class="reveal-demo-side">a</span>
+            <span class="reveal-demo-side script-romaji">a</span>
             <span class="reveal-demo-main">あ</span>
-            <span class="reveal-demo-side">ア</span>
+            <span class="reveal-demo-side script-katakana">ア</span>
           </div>
           <div class="reveal-demo-stage-below" id="revealDemoBelow" hidden>
             <span class="reveal-demo-main">あ</span>
-            <div class="reveal-demo-below-text">a &nbsp;&middot;&nbsp; ア</div>
+            <div class="reveal-demo-below-text"><span class="script-romaji">a</span> &nbsp;&middot;&nbsp; <span class="script-katakana">ア</span></div>
           </div>
         </div>
       </div>
@@ -3177,7 +3204,7 @@
     previewLabel.classList.toggle("font-mincho", state.font === "Yu Mincho Font");
   });
 
-  // ---------- Reveal style preview (side-by-side vs below, like Anki) ----------
+  // ---------- Reveal style preview (side-by-side vs below) ----------
   var revealStyleSelect = $("revealStyleSelect");
   var revealDemoSide = $("revealDemoSide");
   var revealDemoBelow = $("revealDemoBelow");
@@ -3371,6 +3398,8 @@
     rightSideChar.hidden = true;
     leftSideChar.textContent = "";
     rightSideChar.textContent = "";
+    leftSideChar.classList.remove("script-romaji", "script-hiragana", "script-katakana");
+    rightSideChar.classList.remove("script-romaji", "script-hiragana", "script-katakana");
     kanjiCaption.hidden = true;
     kanjiCaption.innerHTML = "";
     kanjiCaption.classList.remove("reveal-below-large");
@@ -3386,6 +3415,17 @@
     Katakana: { left: "Romaji",   right: "Hiragana" }
   };
 
+  // Each script gets a fixed identity color (not the brand accent, so it
+  // never gets confused with "selected"/accent meaning elsewhere) so the two
+  // scripts in a reveal are visually distinguishable even before reading them.
+  var SCRIPT_COLOR_CLASS = { Romaji: "script-romaji", Hiragana: "script-hiragana", Katakana: "script-katakana" };
+  var ALL_SCRIPT_COLOR_CLASSES = ["script-romaji", "script-hiragana", "script-katakana"];
+
+  function setScriptClass(el, script){
+    el.classList.remove.apply(el.classList, ALL_SCRIPT_COLOR_CLASSES);
+    if (script) el.classList.add(SCRIPT_COLOR_CLASS[script]);
+  }
+
   function displayFlankingCharacters(current){
     if (!current) return;
     if (state.mode === "Kanji"){
@@ -3393,7 +3433,10 @@
       if (rec){
         var onList = rec[2] ? rec[2].split(",").join("、") : "—";
         var kunList = rec[3] ? rec[3].split(",").join("、") : "—";
-        kanjiCaption.innerHTML = "<b>On</b> " + onList + " &nbsp; <b>Kun</b> " + kunList +
+        // On/kun readings are themselves written in hiragana, so tint them
+        // with the same color as the Hiragana script for consistency.
+        kanjiCaption.innerHTML = "<b>On</b> <span class=\"script-hiragana\">" + onList + "</span>" +
+          " &nbsp; <b>Kun</b> <span class=\"script-hiragana\">" + kunList + "</span>" +
           "<br><b>Meaning</b> " + (rec[4] || "—") + " &nbsp; <b>JLPT</b> N" + rec[1];
         kanjiCaption.hidden = false;
       }
@@ -3408,13 +3451,17 @@
         }
       }
       if (state.revealStyle === "below"){
-        var parts = [leftText, rightText].filter(function(t){ return t; });
-        if (parts.length){
+        var pieces = [];
+        if (leftText) pieces.push("<span class=\"" + SCRIPT_COLOR_CLASS[flank.left] + "\">" + leftText + "</span>");
+        if (rightText) pieces.push("<span class=\"" + SCRIPT_COLOR_CLASS[flank.right] + "\">" + rightText + "</span>");
+        if (pieces.length){
           kanjiCaption.classList.add("reveal-below-large");
-          kanjiCaption.textContent = parts.join(" · ");
+          kanjiCaption.innerHTML = pieces.join(" <span class=\"reveal-dot\">&middot;</span> ");
           kanjiCaption.hidden = false;
         }
       } else {
+        setScriptClass(leftSideChar, flank ? flank.left : null);
+        setScriptClass(rightSideChar, flank ? flank.right : null);
         leftSideChar.textContent = leftText;
         rightSideChar.textContent = rightText;
         leftSideChar.hidden = !leftText;
@@ -3559,6 +3606,26 @@
   });
 
   // ---------- Audio (Web Speech API - no data/network needed) ----------
+  // Voice quality varies a lot by OS/browser: some ship only a robotic SAPI
+  // voice, others (notably Chrome, when online) also offer a Google network
+  // voice that sounds far more natural. We can't bundle real audio without a
+  // paid API + a backend to hide the key, so instead we just pick the best
+  // *already available* voice on the visitor's own device.
+  var cachedVoices = [];
+  function refreshVoices(){ cachedVoices = window.speechSynthesis.getVoices(); }
+  if ("speechSynthesis" in window){
+    refreshVoices();
+    window.speechSynthesis.onvoiceschanged = refreshVoices;
+  }
+  function pickBestJapaneseVoice(){
+    var voices = cachedVoices.length ? cachedVoices : window.speechSynthesis.getVoices();
+    var ja = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf("ja") === 0; });
+    if (!ja.length) return null;
+    return ja.find(function(v){ return /google/i.test(v.name); }) ||
+           ja.find(function(v){ return /natural|neural|premium|enhanced/i.test(v.name); }) ||
+           ja[0];
+  }
+
   function speakCurrentCharacter(){
     if (!("speechSynthesis" in window)) return;
     var text = mainChar.textContent;
@@ -3571,6 +3638,8 @@
     var utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ja-JP";
     utter.rate = 0.85;
+    var voice = pickBestJapaneseVoice();
+    if (voice) utter.voice = voice;
     window.speechSynthesis.speak(utter);
   }
   audioBtn.addEventListener("click", speakCurrentCharacter);
