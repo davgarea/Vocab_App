@@ -230,10 +230,13 @@
   #strokeCanvas{ position:absolute; top:8px; left:8px; pointer-events:none; }
   .char-stage{ position:relative; width:100%; height:clamp(64px,20vw,100px); transition:height .15s ease; }
   .char-stage.tall-stage{ height:clamp(128px,34vw,180px); }
+  .char-stage.tall-stage-lg{ height:clamp(155px,42vw,220px); }
   .kanji-caption.reveal-below-large{
-    font-size:clamp(28px,9vw,44px); font-weight:600; opacity:1; line-height:1.2;
+    font-size:clamp(28px,9vw,44px); font-weight:600; opacity:1; line-height:1;
     font-family:Arial,'Hiragino Sans',sans-serif;
+    display:flex; align-items:center; justify-content:center; gap:16px;
   }
+  .kanji-caption.reveal-below-large .reveal-dot{ font-size:.55em; line-height:1; }
   .kanji-caption.reveal-below-large.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN',serif; }
   .main-char, .side-char{
     position:absolute; top:50%;
@@ -306,6 +309,7 @@
   }
   .kanji-caption[hidden]{ display:none; }
   .kanji-caption b{ font-weight:700; }
+  .kanji-caption.reveal-below-large{ bottom:16px; }
 
   .stage-tools{ position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:2; }
   .tool-btn{
@@ -3334,7 +3338,9 @@
   }
 
   function updateStageHeight(){
-    charStage.classList.toggle("tall-stage", state.mode === "Kanji" || state.revealStyle === "below");
+    var kanaBelow = state.mode !== "Kanji" && state.revealStyle === "below";
+    charStage.classList.toggle("tall-stage", state.mode === "Kanji");
+    charStage.classList.toggle("tall-stage-lg", kanaBelow);
   }
 
   function setMode(mode){
@@ -3456,7 +3462,7 @@
         if (rightText) pieces.push("<span class=\"" + SCRIPT_COLOR_CLASS[flank.right] + "\">" + rightText + "</span>");
         if (pieces.length){
           kanjiCaption.classList.add("reveal-below-large");
-          kanjiCaption.innerHTML = pieces.join(" <span class=\"reveal-dot\">&middot;</span> ");
+          kanjiCaption.innerHTML = pieces.join("<span class=\"reveal-dot\">&middot;</span>");
           kanjiCaption.hidden = false;
         }
       } else {
