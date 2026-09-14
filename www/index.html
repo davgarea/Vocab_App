@@ -40,6 +40,11 @@
      whole shell here too, via these classes on <html>. Default (no class)
      is Light Mode, matching the original app's own default. */
   :root.app-theme-dark{
+    /* Tells the browser to use dark-appropriate native UI (scrollbars, form
+       control chrome) instead of the OS/browser default light ones - without
+       this, a scrollable panel like the map grid gets a native light-grey
+       scrollbar that clashes badly with the dark theme around it. */
+    color-scheme: dark;
     --bg:#16170F; --surface:#1E2019; --surface-2:#242620; --ink:#ECEEE3; --ink-muted:#9A9E8D;
     --border:#33362B;
     --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 30px -16px rgba(0,0,0,.65);
@@ -378,6 +383,12 @@
   }
   .map-back-btn:hover{ border-color:var(--accent); color:var(--accent); }
   .map-grid{ overflow-y:auto; padding:12px 16px 18px; }
+  /* Belt-and-suspenders for color-scheme above: explicit dark scrollbar
+     colors for WebKit/Blink (covers older Android WebView versions that
+     don't fully honor color-scheme for scrollbars). */
+  :root.app-theme-dark .map-grid::-webkit-scrollbar{ width:8px; }
+  :root.app-theme-dark .map-grid::-webkit-scrollbar-track{ background:var(--surface); }
+  :root.app-theme-dark .map-grid::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
   .map-section-title{
     font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
     color:var(--ink-muted); margin:14px 0 7px;
