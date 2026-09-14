@@ -9941,8 +9941,20 @@
     }, 500);
   }
 
+  // Set right before leaving page1 via "New Course" - initPage4IfNeeded()
+  // below only ever runs its setup once per app session, but the tutorial
+  // should show every time a course is (re)started, so it's tracked
+  // separately rather than folded into that one-time init.
+  var showTutorialOnNextPage4 = false;
+
   function afterShow(pageId){
-    if (pageId === "page4"){ initPage4IfNeeded(); }
+    if (pageId === "page4"){
+      initPage4IfNeeded();
+      if (showTutorialOnNextPage4){
+        showTutorialOnNextPage4 = false;
+        startTutorial();
+      }
+    }
   }
 
   // ---------- Page 0 ----------
@@ -9972,6 +9984,7 @@
 
   // ---------- Page 1 ----------
   $("newCourseBtn").addEventListener("click", function(){
+    showTutorialOnNextPage4 = true;
     goTo("page2", { fade:true });
   });
 
@@ -10681,7 +10694,9 @@
   mapOverlay.addEventListener("click", function(e){ if (e.target === mapOverlay) closeMap(); });
 
   // ---------- Onboarding tutorial: branching intro + feature tour ----------
-  var TUTORIAL_KEY = "charlingo_tutorial_done";
+  // Shown automatically every time a New Course is set up (this app never
+  // persists session state between opens anyway, so there's no "seen it
+  // already" to track) - also reachable any time via "Replay tutorial".
   var tutorialOverlay = $("tutorialOverlay");
   var tutorialCard = $("tutorialCard");
 
@@ -10722,11 +10737,8 @@
     { selector: "#stepsToggle", text: "Your progress and app settings live here - including replaying this tutorial." }
   ];
 
-  function closeTutorial(markDone){
+  function closeTutorial(){
     tutorialOverlay.hidden = true;
-    if (markDone){
-      try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch(e){}
-    }
   }
 
   function renderTutorialGate(){
@@ -10741,7 +10753,7 @@
       '<div class="tutorial-nav-row"><button class="tutorial-skip-link" id="tutorialSkipAll" type="button">Skip for now</button></div>';
     tutorialCard.querySelector('[data-choice="new"]').addEventListener("click", function(){ renderWritingCheck(true); });
     tutorialCard.querySelector('[data-choice="studied"]').addEventListener("click", function(){ renderWritingCheck(false); });
-    $("tutorialSkipAll").addEventListener("click", function(){ closeTutorial(true); });
+    $("tutorialSkipAll").addEventListener("click", function(){ closeTutorial(); });
   }
 
   function renderWritingCheck(isNew){
@@ -10781,7 +10793,7 @@
           '<button class="tutorial-nav-btn tutorial-nav-btn-primary" id="tutorialPrimerNext" type="button">' + (isLast ? "Continue" : "Next") + '</button>' +
         '</div>' +
       '</div>';
-    $("tutorialSkipAll2").addEventListener("click", function(){ closeTutorial(true); });
+    $("tutorialSkipAll2").addEventListener("click", function(){ closeTutorial(); });
     $("tutorialPrimerBack").addEventListener("click", function(){ if (index > 0) renderPrimerSlide(index - 1); });
     $("tutorialPrimerNext").addEventListener("click", function(){
       if (isLast) renderTourOffer(); else renderPrimerSlide(index + 1);
@@ -10798,19 +10810,13 @@
         '<button class="tutorial-choice-btn" data-choice="skip">Skip, I’m ready</button>' +
       '</div>';
     tutorialCard.querySelector('[data-choice="tour"]').addEventListener("click", function(){
-      closeTutorial(true);
+      closeTutorial();
       startFeatureTour();
     });
-    tutorialCard.querySelector('[data-choice="skip"]').addEventListener("click", function(){ closeTutorial(true); });
+    tutorialCard.querySelector('[data-choice="skip"]').addEventListener("click", function(){ closeTutorial(); });
   }
 
-  function startTutorial(opts){
-    opts = opts || {};
-    if (!opts.force){
-      var done = false;
-      try { done = localStorage.getItem(TUTORIAL_KEY) === "1"; } catch(e){}
-      if (done) return;
-    }
+  function startTutorial(){
     if (state.step !== PAGES.indexOf("page4")){
       goTo("page4", { fade:true });
     }
@@ -10909,7 +10915,7 @@
 
   $("stepsMenuTutorial").addEventListener("click", function(){
     closeAllMenus();
-    startTutorial({ force: true });
+    startTutorial();
   });
 
   function initPage4IfNeeded(){
@@ -10925,7 +10931,6 @@
     updateRevealScriptsRow(state.mode);
     updateSequenceLabels(state.mode);
     showCharacterBasedOnSelection();
-    startTutorial();
   }
 
   // keep page4 chrome in sync if theme/font settings change after a visit
