@@ -579,7 +579,7 @@
       <h1 class="page-title">Welcome to CharlinGO</h1>
       <div class="menu-buttons">
         <button class="btn btn-primary" id="newCourseBtn">New Course</button>
-        <button class="btn" disabled>Load Course</button>
+        <button class="btn" id="loadCourseBtn" disabled>Load Course</button>
         <button class="btn" disabled>Help / Support</button>
         <button class="btn" disabled>About the App</button>
       </div>
@@ -9765,8 +9765,7 @@
   // A minimal scheduler, not full SM-2/FSRS: each character has an integer
   // weight (default 3). Marking (batsu) pushes it up (shown more often
   // under SRS); marking (maru) pushes it down. Persisted in localStorage so
-  // it survives reloads - unlike the rest of this app's state, which
-  // intentionally resets every launch to match the original desktop app.
+  // it survives reloads, same as the course settings below.
   var SRS_STORAGE_KEY = "charlingo_srs_weights_v1";
   var SRS_DEFAULT_WEIGHT = 3;
   var SRS_MIN_WEIGHT = 1;
@@ -9787,6 +9786,41 @@
   var srsWeights = loadSrsWeights();
 
   function srsKey(mode, character){ return mode + ":" + character; }
+
+  // ---------- Course persistence (settings + where you left off) ----------
+  var COURSE_STORAGE_KEY = "charlingo_course_v1";
+  var pendingCourseLoad = null;
+
+  function loadSavedCourse(){
+    try {
+      var raw = localStorage.getItem(COURSE_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveCourse(){
+    try {
+      var data = {
+        uiLang: uiLangSelect.value,
+        learningLang: learningLangSelect.value,
+        courseName: courseNameInput.value,
+        theme: state.theme,
+        font: state.font,
+        revealStyle: state.revealStyle,
+        voice: state.voice,
+        mode: state.mode,
+        currentIndex: state.currentIndex,
+        audioBtnMode: state.audioBtnMode,
+        revealScripts: state.revealScripts,
+        sequenceOrder: sequenceSelect.value,
+        jlptLevel: jlptSelect.value
+      };
+      localStorage.setItem(COURSE_STORAGE_KEY, JSON.stringify(data));
+      loadCourseBtn.disabled = false;
+    } catch (e) {}
+  }
 
   function getSrsWeight(mode, character){
     var w = srsWeights[srsKey(mode, character)];
@@ -9960,9 +9994,17 @@
   function afterShow(pageId){
     if (pageId === "page4"){
       initPage4IfNeeded();
-      if (showTutorialOnNextPage4){
+      if (pendingCourseLoad){
+        var data = pendingCourseLoad;
+        pendingCourseLoad = null;
+        applyLoadedCourseToPage4(data);
+      } else if (showTutorialOnNextPage4){
         showTutorialOnNextPage4 = false;
-        startTutorial();
+        // The page itself is still mid fade-in (.page.fade-in runs 500ms)
+        // when this fires - starting the tutorial's own fade right on top
+        // of that reads as two animations fighting each other. Let the
+        // page settle first, then bring the tutorial in as its own step.
+        window.setTimeout(startTutorial, 450);
       }
     }
   }
@@ -9996,6 +10038,22 @@
   $("newCourseBtn").addEventListener("click", function(){
     showTutorialOnNextPage4 = true;
     goTo("page2", { fade:true });
+  });
+
+  var loadCourseBtn = $("loadCourseBtn");
+  if (loadSavedCourse()) loadCourseBtn.disabled = false;
+  loadCourseBtn.addEventListener("click", function(){
+    var data = loadSavedCourse();
+    if (!data) return;
+    if (data.uiLang) uiLangSelect.value = data.uiLang;
+    if (data.learningLang) learningLangSelect.value = data.learningLang;
+    if (data.courseName) courseNameInput.value = data.courseName;
+    if (data.theme){ themeSelect.value = data.theme; state.theme = data.theme; applySimTheme(data.theme); applyShellTheme(data.theme); }
+    if (data.font){ fontSelect.value = data.font; state.font = data.font; }
+    if (data.revealStyle){ revealStyleSelect.value = data.revealStyle; state.revealStyle = data.revealStyle; }
+    if (data.voice){ voiceSelect.value = data.voice; state.voice = data.voice; }
+    pendingCourseLoad = data;
+    goTo("page4", { fade:true });
   });
 
   // ---------- Page 2 ----------
@@ -10108,6 +10166,7 @@
   });
 
   page3Continue.addEventListener("click", function(){
+    saveCourse();
     goTo("page4", { fade:true });
   });
 
@@ -10236,6 +10295,7 @@
     updateRevealScriptsRow(mode);
     updateSequenceLabels(mode);
     showCharacterBasedOnSelection();
+    saveCourse();
   }
 
   function getCharacterToShow(option){
@@ -10488,7 +10548,10 @@
     toggleShowExtra();
   });
 
-  goBtn.addEventListener("click", showCharacterBasedOnSelection);
+  goBtn.addEventListener("click", function(){
+    showCharacterBasedOnSelection();
+    saveCourse();
+  });
 
   sequenceSelect.addEventListener("change", function(){
     if (sequenceSelect.value === "Start from Gojūon Order"){
@@ -10503,6 +10566,7 @@
       batsuBtn.classList.remove("visible", "selected");
       maruBtn.classList.remove("visible", "selected");
     }
+    saveCourse();
   });
 
   Object.keys(SCRIPT_CHECKS).forEach(function(script){
@@ -10510,6 +10574,7 @@
       state.revealScripts[script] = e.target.checked;
       // Live-update an already-open reveal rather than waiting for the next Go.
       if (state.showExtra && state.mode !== "Kanji") displayFlankingCharacters(mainChar.textContent);
+      saveCourse();
     });
   });
 
@@ -10525,6 +10590,7 @@
         b.classList.toggle("active", b === btn);
       });
       applyAudioBtnMode();
+      saveCourse();
     });
   });
 
@@ -10544,6 +10610,7 @@
     resetExtraCharacters();
     state.showExtra = false;
     showCharacterBasedOnSelection();
+    saveCourse();
   });
 
   // ---------- Audio (Web Speech API - no data/network needed) ----------
@@ -10943,6 +11010,32 @@
     positionAnswerRow();
     state.mode = DEFAULT_MODE;
     state.currentIndex = 0;
+    updateStageHeight();
+    updateRevealScriptsRow(state.mode);
+    updateSequenceLabels(state.mode);
+    showCharacterBasedOnSelection();
+  }
+
+  // Restores a previously-saved course (settings + where you left off) on
+  // top of whatever initPage4IfNeeded() just set up, then re-renders to
+  // match. Runs every "Load Course" - unlike initPage4IfNeeded()'s DOM
+  // setup, this isn't a one-time thing.
+  function applyLoadedCourseToPage4(data){
+    state.mode = data.mode || DEFAULT_MODE;
+    state.currentIndex = data.currentIndex || 0;
+    state.audioBtnMode = data.audioBtnMode || "always";
+    state.revealScripts = data.revealScripts || state.revealScripts;
+    if (data.sequenceOrder) sequenceSelect.value = data.sequenceOrder;
+    if (data.jlptLevel) jlptSelect.value = data.jlptLevel;
+    Object.keys(SCRIPT_CHECKS).forEach(function(script){
+      SCRIPT_CHECKS[script].checked = !!state.revealScripts[script];
+    });
+    audioBtnModeGroup.querySelectorAll(".segmented-btn").forEach(function(b){
+      b.classList.toggle("active", b.dataset.value === state.audioBtnMode);
+    });
+    applyAudioBtnMode();
+    styleModeButtons();
+    jlptRow.hidden = state.mode !== "Kanji";
     updateStageHeight();
     updateRevealScriptsRow(state.mode);
     updateSequenceLabels(state.mode);
