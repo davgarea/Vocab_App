@@ -380,6 +380,67 @@
   .map-cell-char{ font-size:18px; color:var(--ink); line-height:1; }
   .map-cell-sub{ font-size:9px; color:var(--ink-muted); line-height:1.2; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 
+  /* ---------- Onboarding tutorial (branching intro + feature tour) ---------- */
+  .tutorial-overlay{
+    position:fixed; inset:0; background:rgba(20,18,14,.55); z-index:400;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .tutorial-overlay[hidden]{ display:none; }
+  .tutorial-card{
+    background:var(--surface); border-radius:16px; box-shadow:var(--shadow);
+    width:100%; max-width:400px; max-height:86vh; overflow-y:auto;
+    padding:26px 22px;
+  }
+  .tutorial-eyebrow{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); margin:0 0 8px; }
+  .tutorial-heading{ font-family:var(--font-display); font-weight:700; font-size:19px; margin:0 0 10px; line-height:1.32; }
+  .tutorial-body{ font-size:13.5px; line-height:1.6; color:var(--ink-muted); margin:0 0 20px; white-space:pre-line; }
+  .tutorial-choices{ display:flex; flex-direction:column; gap:10px; }
+  .tutorial-choice-btn{
+    font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--ink);
+    background:var(--surface-2); border:1.5px solid var(--border); border-radius:11px;
+    padding:13px 16px; text-align:left; cursor:pointer; transition:border-color .15s ease;
+  }
+  .tutorial-choice-btn:hover{ border-color:var(--accent); }
+  .tutorial-choice-sub{ display:block; font-weight:400; font-size:12px; color:var(--ink-muted); margin-top:3px; }
+  .tutorial-slide-icon{ font-size:32px; line-height:1; margin-bottom:12px; }
+  .tutorial-dots{ display:flex; gap:6px; justify-content:center; margin-top:18px; }
+  .tutorial-dot{ width:6px; height:6px; border-radius:50%; background:var(--border); }
+  .tutorial-dot.active{ background:var(--accent); width:16px; border-radius:4px; transition:width .2s ease; }
+  .tutorial-nav-row{ display:flex; align-items:center; margin-top:18px; gap:10px; }
+  .tutorial-skip-link{ background:none; border:none; color:var(--ink-muted); font-size:12px; cursor:pointer; text-decoration:underline; padding:6px 0; }
+  .tutorial-nav-btns{ display:flex; gap:8px; margin-left:auto; }
+  .tutorial-nav-btn{
+    font-family:var(--font-body); font-size:13px; font-weight:600; padding:9px 16px; border-radius:9px;
+    border:1.5px solid var(--border); background:var(--surface-2); color:var(--ink); cursor:pointer;
+  }
+  .tutorial-nav-btn:disabled{ opacity:.35; cursor:default; }
+  .tutorial-nav-btn-primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
+  /* Feature tour: a 4-box "dimmer" surrounds a cutout around the highlighted
+     element (simpler and more compatible than a clip-path/SVG-mask hole),
+     with an accent ring on top of it and a small bubble of instructions. */
+  .tour-overlay{ position:fixed; inset:0; z-index:400; }
+  .tour-overlay[hidden]{ display:none; }
+  .tour-dim{ position:fixed; background:rgba(15,14,10,.62); transition:top .25s ease, bottom .25s ease, left .25s ease, right .25s ease, height .25s ease, width .25s ease; }
+  .tour-ring{
+    position:fixed; border-radius:14px; box-shadow:0 0 0 3px var(--accent); pointer-events:none;
+    transition:top .25s ease, left .25s ease, width .25s ease, height .25s ease;
+  }
+  .tour-bubble{
+    position:fixed; width:248px; background:var(--surface); color:var(--ink); border-radius:12px;
+    padding:14px 16px; box-shadow:var(--shadow); transition:top .25s ease, left .25s ease;
+  }
+  .tour-bubble-text{ font-size:13px; line-height:1.55; margin-bottom:12px; }
+  .tour-bubble-actions{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .tour-skip{ background:none; border:none; color:var(--ink-muted); font-size:11.5px; cursor:pointer; text-decoration:underline; padding:0; white-space:nowrap; }
+  .tour-bubble-nav{ display:flex; gap:6px; }
+  .tour-nav-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600; padding:7px 12px; border-radius:8px;
+    border:1.5px solid var(--border); background:var(--surface-2); color:var(--ink); cursor:pointer;
+  }
+  .tour-nav-btn:disabled{ opacity:.35; cursor:default; }
+  .tour-nav-btn-primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
   .stage-wrap{ position:relative; }
   .options-toggle{
     position:absolute; bottom:-13px; left:50%; transform:translateX(-50%);
@@ -440,6 +501,7 @@
           </div>
         </button>
         <div class="popover-menu" id="stepsMenu" hidden>
+          <button class="popover-item" id="stepsMenuTutorial" type="button">Replay tutorial</button>
           <button class="popover-item" id="stepsMenuReset" type="button">Reset study progress</button>
           <button class="popover-item" id="stepsMenuHelp" type="button">Help / Support</button>
         </div>
@@ -474,7 +536,7 @@
         <button class="btn btn-primary" id="newCourseBtn">New Course</button>
         <button class="btn" disabled>Load Course</button>
         <button class="btn" disabled>Help / Support</button>
-        <button class="btn" disabled>How it Works</button>
+        <button class="btn" id="howItWorksBtn">How it Works</button>
         <button class="btn" disabled>About the App</button>
       </div>
     </section>
@@ -652,6 +714,28 @@
       <button class="map-back-btn" id="mapBackBtn" type="button">&larr; Back</button>
     </div>
     <div class="map-grid" id="mapGrid"></div>
+  </div>
+</div>
+
+<div class="tutorial-overlay" id="tutorialOverlay" hidden>
+  <div class="tutorial-card" id="tutorialCard"></div>
+</div>
+
+<div class="tour-overlay" id="tourOverlay" hidden>
+  <div class="tour-dim" id="tourDimTop"></div>
+  <div class="tour-dim" id="tourDimBottom"></div>
+  <div class="tour-dim" id="tourDimLeft"></div>
+  <div class="tour-dim" id="tourDimRight"></div>
+  <div class="tour-ring" id="tourRing"></div>
+  <div class="tour-bubble" id="tourBubble">
+    <div class="tour-bubble-text" id="tourBubbleText"></div>
+    <div class="tour-bubble-actions">
+      <button class="tour-skip" id="tourSkipBtn" type="button">Skip tour</button>
+      <div class="tour-bubble-nav">
+        <button class="tour-nav-btn" id="tourBackBtn" type="button">Back</button>
+        <button class="tour-nav-btn tour-nav-btn-primary" id="tourNextBtn" type="button">Next</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -9848,6 +9932,9 @@
   $("newCourseBtn").addEventListener("click", function(){
     goTo("page2", { fade:true });
   });
+  $("howItWorksBtn").addEventListener("click", function(){
+    startTutorial({ force: true });
+  });
 
   // ---------- Page 2 ----------
   var page2Message = $("page2Message");
@@ -10523,6 +10610,238 @@
   mapBackBtn.addEventListener("click", closeMap);
   mapOverlay.addEventListener("click", function(e){ if (e.target === mapOverlay) closeMap(); });
 
+  // ---------- Onboarding tutorial: branching intro + feature tour ----------
+  var TUTORIAL_KEY = "charlingo_tutorial_done";
+  var tutorialOverlay = $("tutorialOverlay");
+  var tutorialCard = $("tutorialCard");
+
+  var WRITING_SYSTEM_SLIDES = [
+    {
+      icon: "🇯🇵",
+      heading: "Japanese uses three scripts together",
+      body: "A single sentence mixes Hiragana, Katakana, and Kanji - it's not a choice between them. Once you can read all three, you can read real Japanese."
+    },
+    {
+      icon: "あ",
+      heading: "Hiragana - the phonetic base",
+      body: "46 basic characters (plus a few marks for extra sounds) that spell out native Japanese words and grammar. Every other script builds on these same sounds."
+    },
+    {
+      icon: "ア",
+      heading: "Katakana - same sounds, different shapes",
+      body: "Katakana spells the exact same sounds as Hiragana, but is used for foreign/loan words, names, and emphasis - similar to how English uses italics."
+    },
+    {
+      icon: "漢",
+      heading: "Kanji - borrowed meaning",
+      body: "Thousands of characters borrowed from Chinese, each carrying meaning rather than just sound. Most have multiple readings depending on context - a few thousand cover everyday reading."
+    },
+    {
+      icon: "abc",
+      heading: "Romaji - just a stepping stone",
+      body: "Spelling Japanese sounds with our alphabet (like “ka”, “shi”) isn't actually used in real Japanese writing - it's training wheels this app uses to help you get started."
+    }
+  ];
+
+  var TOUR_STEPS = [
+    { selector: "#modeButtons", text: "Switch between Romaji, Hiragana, Katakana, and Kanji here." },
+    { selector: "#charStage", text: "This is the character to learn. Tap it to hear it and reveal the answer." },
+    { selector: "#audioBtn", text: "Tap here any time to hear the correct pronunciation." },
+    { selector: "#goBtn", text: "Tap Go to move on to the next character." },
+    { selector: "#optionsToggle", text: "Open this for extra settings, like study order." },
+    { selector: "#stepsToggle", text: "Your progress and app settings live here - including replaying this tutorial." }
+  ];
+
+  function closeTutorial(markDone){
+    tutorialOverlay.hidden = true;
+    if (markDone){
+      try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch(e){}
+    }
+  }
+
+  function renderTutorialGate(){
+    tutorialCard.innerHTML =
+      '<div class="tutorial-eyebrow">Welcome</div>' +
+      '<h2 class="tutorial-heading">New to Japanese?</h2>' +
+      '<p class="tutorial-body">Let’s get you set up right - this only takes a moment.</p>' +
+      '<div class="tutorial-choices">' +
+        '<button class="tutorial-choice-btn" data-choice="new">I’m new to Japanese<span class="tutorial-choice-sub">I’ve never studied it before</span></button>' +
+        '<button class="tutorial-choice-btn" data-choice="studied">I’ve studied before<span class="tutorial-choice-sub">I know some Japanese already</span></button>' +
+      '</div>' +
+      '<div class="tutorial-nav-row"><button class="tutorial-skip-link" id="tutorialSkipAll" type="button">Skip for now</button></div>';
+    tutorialCard.querySelector('[data-choice="new"]').addEventListener("click", function(){ renderWritingCheck(true); });
+    tutorialCard.querySelector('[data-choice="studied"]').addEventListener("click", function(){ renderWritingCheck(false); });
+    $("tutorialSkipAll").addEventListener("click", function(){ closeTutorial(true); });
+  }
+
+  function renderWritingCheck(isNew){
+    var heading = isNew ? "Do you know the writing system yet?" : "Want a quick refresher?";
+    var body = isNew ?
+      "Japanese is written with Hiragana, Katakana, and Kanji together. Want a one-minute rundown before we start?" :
+      "You’ve studied before - want a quick refresher on how Hiragana, Katakana, and Kanji fit together?";
+    tutorialCard.innerHTML =
+      '<div class="tutorial-eyebrow">' + (isNew ? "New here" : "Welcome back") + '</div>' +
+      '<h2 class="tutorial-heading">' + heading + '</h2>' +
+      '<p class="tutorial-body">' + body + '</p>' +
+      '<div class="tutorial-choices">' +
+        '<button class="tutorial-choice-btn" data-choice="yes">' + (isNew ? "Not yet - show me" : "Yes, refresh me") + '</button>' +
+        '<button class="tutorial-choice-btn" data-choice="no">' + (isNew ? "I already know them" : "No, I know it") + '</button>' +
+      '</div>' +
+      '<div class="tutorial-nav-row"><button class="tutorial-skip-link" id="tutorialBackToGate" type="button">&larr; Back</button></div>';
+    tutorialCard.querySelector('[data-choice="yes"]').addEventListener("click", function(){ renderPrimerSlide(0); });
+    tutorialCard.querySelector('[data-choice="no"]').addEventListener("click", function(){ renderTourOffer(); });
+    $("tutorialBackToGate").addEventListener("click", renderTutorialGate);
+  }
+
+  function renderPrimerSlide(index){
+    var slide = WRITING_SYSTEM_SLIDES[index];
+    var isLast = index === WRITING_SYSTEM_SLIDES.length - 1;
+    var dots = WRITING_SYSTEM_SLIDES.map(function(_, i){
+      return '<span class="tutorial-dot' + (i === index ? ' active' : '') + '"></span>';
+    }).join("");
+    tutorialCard.innerHTML =
+      '<div class="tutorial-slide-icon">' + slide.icon + '</div>' +
+      '<h2 class="tutorial-heading">' + slide.heading + '</h2>' +
+      '<p class="tutorial-body">' + slide.body + '</p>' +
+      '<div class="tutorial-dots">' + dots + '</div>' +
+      '<div class="tutorial-nav-row">' +
+        '<button class="tutorial-skip-link" id="tutorialSkipAll2" type="button">Skip</button>' +
+        '<div class="tutorial-nav-btns">' +
+          '<button class="tutorial-nav-btn" id="tutorialPrimerBack" type="button"' + (index === 0 ? " disabled" : "") + '>Back</button>' +
+          '<button class="tutorial-nav-btn tutorial-nav-btn-primary" id="tutorialPrimerNext" type="button">' + (isLast ? "Continue" : "Next") + '</button>' +
+        '</div>' +
+      '</div>';
+    $("tutorialSkipAll2").addEventListener("click", function(){ closeTutorial(true); });
+    $("tutorialPrimerBack").addEventListener("click", function(){ if (index > 0) renderPrimerSlide(index - 1); });
+    $("tutorialPrimerNext").addEventListener("click", function(){
+      if (isLast) renderTourOffer(); else renderPrimerSlide(index + 1);
+    });
+  }
+
+  function renderTourOffer(){
+    tutorialCard.innerHTML =
+      '<div class="tutorial-eyebrow">Almost there</div>' +
+      '<h2 class="tutorial-heading">Want a quick tour of the app?</h2>' +
+      '<p class="tutorial-body">I’ll point out the main features - takes about 30 seconds.</p>' +
+      '<div class="tutorial-choices">' +
+        '<button class="tutorial-choice-btn" data-choice="tour">Take the tour</button>' +
+        '<button class="tutorial-choice-btn" data-choice="skip">Skip, I’m ready</button>' +
+      '</div>';
+    tutorialCard.querySelector('[data-choice="tour"]').addEventListener("click", function(){
+      closeTutorial(true);
+      startFeatureTour();
+    });
+    tutorialCard.querySelector('[data-choice="skip"]').addEventListener("click", function(){ closeTutorial(true); });
+  }
+
+  function startTutorial(opts){
+    opts = opts || {};
+    if (!opts.force){
+      var done = false;
+      try { done = localStorage.getItem(TUTORIAL_KEY) === "1"; } catch(e){}
+      if (done) return;
+    }
+    if (state.step !== PAGES.indexOf("page4")){
+      goTo("page4", { fade:true });
+    }
+    renderTutorialGate();
+    tutorialOverlay.hidden = false;
+  }
+
+  // ---------- Feature tour: spotlight overlay ----------
+  // A 4-box "dimmer" surrounds a cutout around the highlighted element -
+  // simpler and more broadly compatible than a clip-path/SVG-mask hole -
+  // with an accent ring on top and a small instruction bubble.
+  var tourOverlay = $("tourOverlay");
+  var tourDimTop = $("tourDimTop"), tourDimBottom = $("tourDimBottom");
+  var tourDimLeft = $("tourDimLeft"), tourDimRight = $("tourDimRight");
+  var tourRing = $("tourRing");
+  var tourBubble = $("tourBubble");
+  var tourBubbleText = $("tourBubbleText");
+  var tourBackBtn = $("tourBackBtn");
+  var tourNextBtn = $("tourNextBtn");
+  var tourSkipBtn = $("tourSkipBtn");
+  var tourIndex = 0;
+
+  function endTour(){
+    tourOverlay.hidden = true;
+    window.removeEventListener("resize", renderTourStep);
+  }
+
+  function renderTourStep(){
+    var step = TOUR_STEPS[tourIndex];
+    if (!step){ endTour(); return; }
+    var el = document.querySelector(step.selector);
+    if (!el || el.offsetParent === null){
+      // Target not visible right now (e.g. hidden by current state) - skip it.
+      if (tourIndex < TOUR_STEPS.length - 1){ tourIndex++; renderTourStep(); }
+      else endTour();
+      return;
+    }
+    var r = el.getBoundingClientRect();
+    var pad = 8;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var top = Math.max(0, r.top - pad), left = Math.max(0, r.left - pad);
+    var right = Math.min(vw, r.right + pad), bottom = Math.min(vh, r.bottom + pad);
+
+    // Some targets (like the tiny progress-dot app menu) are only a few
+    // pixels tall/wide - widen the ring around their center so it never
+    // collapses down to an unreadable sliver.
+    var minSize = 32;
+    if (right - left < minSize){
+      var cx = (left + right) / 2;
+      left = Math.max(0, cx - minSize / 2);
+      right = Math.min(vw, left + minSize);
+    }
+    if (bottom - top < minSize){
+      var cy = (top + bottom) / 2;
+      top = Math.max(0, cy - minSize / 2);
+      bottom = Math.min(vh, top + minSize);
+    }
+
+    tourDimTop.style.cssText = "top:0;left:0;right:0;height:" + top + "px;";
+    tourDimBottom.style.cssText = "top:" + bottom + "px;left:0;right:0;bottom:0;";
+    tourDimLeft.style.cssText = "top:" + top + "px;left:0;width:" + left + "px;height:" + (bottom - top) + "px;";
+    tourDimRight.style.cssText = "top:" + top + "px;left:" + right + "px;right:0;height:" + (bottom - top) + "px;";
+
+    tourRing.style.top = top + "px";
+    tourRing.style.left = left + "px";
+    tourRing.style.width = (right - left) + "px";
+    tourRing.style.height = (bottom - top) + "px";
+
+    var bubbleWidth = 248;
+    var spaceBelow = vh - bottom;
+    var bubbleTop = spaceBelow > 160 ? bottom + 12 : Math.max(12, top - 152);
+    var bubbleLeft = Math.min(vw - bubbleWidth - 12, Math.max(12, left));
+    tourBubble.style.top = bubbleTop + "px";
+    tourBubble.style.left = bubbleLeft + "px";
+
+    tourBubbleText.textContent = step.text;
+    tourBackBtn.disabled = tourIndex === 0;
+    tourNextBtn.textContent = tourIndex === TOUR_STEPS.length - 1 ? "Done" : "Next";
+  }
+
+  function startFeatureTour(){
+    tourIndex = 0;
+    tourOverlay.hidden = false;
+    renderTourStep();
+    window.addEventListener("resize", renderTourStep);
+  }
+
+  tourNextBtn.addEventListener("click", function(){
+    if (tourIndex < TOUR_STEPS.length - 1){ tourIndex++; renderTourStep(); }
+    else endTour();
+  });
+  tourBackBtn.addEventListener("click", function(){
+    if (tourIndex > 0){ tourIndex--; renderTourStep(); }
+  });
+  tourSkipBtn.addEventListener("click", endTour);
+
+  $("stepsMenuTutorial").addEventListener("click", function(){
+    closeAllMenus();
+    startTutorial({ force: true });
+  });
+
   function initPage4IfNeeded(){
     if (page4Initialized) return;
     page4Initialized = true;
@@ -10536,6 +10855,7 @@
     updateRevealScriptsRow(state.mode);
     updateSequenceLabels(state.mode);
     showCharacterBasedOnSelection();
+    startTutorial();
   }
 
   // keep page4 chrome in sync if theme/font settings change after a visit
