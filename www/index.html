@@ -354,6 +354,7 @@
   #audioBtn.reveal-only{ opacity:0; pointer-events:none; }
   #audioBtn.reveal-only.visible{ opacity:.65; pointer-events:auto; }
   #audioBtn.reveal-only.visible:hover{ opacity:1; }
+  #audioBtn.hidden-off{ display:none; }
 
   .map-overlay{
     position:fixed; inset:0; background:rgba(20,18,14,.5); z-index:100;
@@ -479,7 +480,14 @@
   .options-panel-inner{ overflow:hidden; min-height:0; }
   .bottom-row{ display:flex; align-items:center; gap:10px; }
   .bottom-row select{ flex:1; }
-  .show-btn{ font-family:var(--font-body); font-size:12px; padding:9px 16px; border-radius:8px; border:1px solid var(--border); cursor:pointer; white-space:nowrap; }
+  .segmented{ display:flex; gap:6px; }
+  .segmented-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--ink-muted);
+    padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2);
+    cursor:pointer; transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .segmented-btn:hover{ border-color:var(--accent); }
+  .segmented-btn.active{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 
   .reveal-scripts-row{
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
@@ -708,7 +716,6 @@
               <option value="Continue Gojūon Order">Continue Gojūon Order</option>
               <option value="Start from Gojūon Order">Start from Gojūon Order</option>
             </select>
-            <button class="show-btn" id="showBtn">Show</button>
           </div>
           <div class="reveal-scripts-row" id="revealScriptsRow">
             <span class="reveal-scripts-label">Show</span>
@@ -718,10 +725,11 @@
           </div>
           <div class="reveal-scripts-row">
             <span class="reveal-scripts-label">Sound button</span>
-            <select id="audioBtnModeSelect">
-              <option value="always" selected>Always visible</option>
-              <option value="reveal">Only after reveal</option>
-            </select>
+            <div class="segmented" id="audioBtnModeGroup">
+              <button type="button" class="segmented-btn active" data-value="always">Always</button>
+              <button type="button" class="segmented-btn" data-value="reveal">On reveal</button>
+              <button type="button" class="segmented-btn" data-value="off">Off</button>
+            </div>
           </div>
         </div>
       </div>
@@ -10082,7 +10090,6 @@
   var batsuBtn = $("batsuBtn");
   var maruBtn = $("maruBtn");
   var sequenceSelect = $("sequenceSelect");
-  var showBtn = $("showBtn");
   var strokeCanvas = $("strokeCanvas");
   var optionsToggle = $("optionsToggle");
   var optionsPanel = $("optionsPanel");
@@ -10146,9 +10153,6 @@
     trainerStage.classList.toggle("th-light", !dark);
     goBtn.style.background = dark ? "#3C3C3C" : "#dae0e3";
     goBtn.style.color = dark ? "#FFFFFF" : "#000000";
-    showBtn.style.background = dark ? "#3C3C3C" : "#FFFFFF";
-    showBtn.style.color = dark ? "#FFFFFF" : "#000000";
-    showBtn.style.borderColor = dark ? "#3C3C3C" : "#D3D3D3";
     sequenceSelect.style.background = dark ? "#3C3C3C" : "#FFFFFF";
     sequenceSelect.style.color = dark ? "#FFFFFF" : "#000000";
     sequenceSelect.style.borderColor = dark ? "#3C3C3C" : "#D3D3D3";
@@ -10453,8 +10457,6 @@
 
   goBtn.addEventListener("click", showCharacterBasedOnSelection);
 
-  showBtn.addEventListener("click", toggleShowExtra);
-
   sequenceSelect.addEventListener("change", function(){
     if (sequenceSelect.value === "Start from Gojūon Order"){
       state.currentIndex = 0;
@@ -10478,10 +10480,19 @@
     });
   });
 
-  var audioBtnModeSelect = $("audioBtnModeSelect");
-  audioBtnModeSelect.addEventListener("change", function(){
-    state.audioBtnMode = audioBtnModeSelect.value;
+  var audioBtnModeGroup = $("audioBtnModeGroup");
+  function applyAudioBtnMode(){
     audioBtn.classList.toggle("reveal-only", state.audioBtnMode === "reveal");
+    audioBtn.classList.toggle("hidden-off", state.audioBtnMode === "off");
+  }
+  audioBtnModeGroup.querySelectorAll(".segmented-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      state.audioBtnMode = btn.dataset.value;
+      audioBtnModeGroup.querySelectorAll(".segmented-btn").forEach(function(b){
+        b.classList.toggle("active", b === btn);
+      });
+      applyAudioBtnMode();
+    });
   });
 
   batsuBtn.addEventListener("click", function(){
