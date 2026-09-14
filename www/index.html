@@ -149,6 +149,17 @@
     background:var(--surface-2);
     color:var(--ink);
   }
+  /* Android WebView (and some mobile browsers) render <select> with a native
+     OS widget skin that can ignore the background-color above entirely -
+     force it to use our own CSS box + a custom arrow instead. */
+  select{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    padding-right:32px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 6l4.5 4.5L12.5 6' stroke='%23888888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    background-size:13px;
+  }
   select:focus, input[type="text"]:focus, button:focus-visible{
     outline:2px solid var(--accent); outline-offset:1px;
   }
@@ -338,6 +349,11 @@
   #mapToggle{ opacity:0; pointer-events:none; }
   #mapToggle.visible{ opacity:.65; pointer-events:auto; }
   #mapToggle.visible:hover{ opacity:1; }
+  /* "Sound button: only after reveal" setting - same show/hide pattern as
+     the map icon above. Left off #audioBtn by default (always visible). */
+  #audioBtn.reveal-only{ opacity:0; pointer-events:none; }
+  #audioBtn.reveal-only.visible{ opacity:.65; pointer-events:auto; }
+  #audioBtn.reveal-only.visible:hover{ opacity:1; }
 
   .map-overlay{
     position:fixed; inset:0; background:rgba(20,18,14,.5); z-index:100;
@@ -490,7 +506,6 @@
           </svg>
         </button>
         <div class="popover-menu" id="userMenu" hidden>
-          <button class="popover-item" id="userMenuSettings" type="button">Settings</button>
           <button class="popover-item" id="userMenuLogout" type="button">Log out</button>
         </div>
       </div>
@@ -501,6 +516,7 @@
           </div>
         </button>
         <div class="popover-menu" id="stepsMenu" hidden>
+          <button class="popover-item" id="stepsMenuSettings" type="button">Settings</button>
           <button class="popover-item" id="stepsMenuTutorial" type="button">Replay tutorial</button>
           <button class="popover-item" id="stepsMenuReset" type="button">Reset study progress</button>
           <button class="popover-item" id="stepsMenuHelp" type="button">Help / Support</button>
@@ -536,7 +552,7 @@
         <button class="btn btn-primary" id="newCourseBtn">New Course</button>
         <button class="btn" disabled>Load Course</button>
         <button class="btn" disabled>Help / Support</button>
-        <button class="btn" id="howItWorksBtn">How it Works</button>
+        <button class="btn" disabled>How it Works</button>
         <button class="btn" disabled>About the App</button>
       </div>
     </section>
@@ -643,17 +659,17 @@
         <div class="trainer-stage th-light" id="trainerStage">
           <canvas id="strokeCanvas" width="100" height="100"></canvas>
           <div class="stage-tools">
+            <button class="tool-btn" id="mapToggle" type="button" aria-label="View all characters in this section">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M1.6 3.3 5.3 2l3 1.2 3-1.2 2.5.9v9.8l-2.5-.9-3 1.2-3-1.2-3.7 1.3V3.3Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                <path d="M5.3 2v9.4M8.3 3.2v9.6" stroke="currentColor" stroke-width=".9" opacity=".55"/>
+              </svg>
+            </button>
             <button class="tool-btn" id="audioBtn" type="button" aria-label="Listen to pronunciation">
               <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M2 6.2h2.1L7 3.8v8.4L4.1 9.8H2V6.2Z" fill="currentColor"/>
                 <path d="M9.6 5.6a3.2 3.2 0 0 1 0 4.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
                 <path d="M11.3 3.9a5.6 5.6 0 0 1 0 8.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".55"/>
-              </svg>
-            </button>
-            <button class="tool-btn" id="mapToggle" type="button" aria-label="View all characters in this section">
-              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M1.6 3.3 5.3 2l3 1.2 3-1.2 2.5.9v9.8l-2.5-.9-3 1.2-3-1.2-3.7 1.3V3.3Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-                <path d="M5.3 2v9.4M8.3 3.2v9.6" stroke="currentColor" stroke-width=".9" opacity=".55"/>
               </svg>
             </button>
           </div>
@@ -699,6 +715,13 @@
             <label class="check-pill"><input type="checkbox" id="chkRomaji" data-script="Romaji" checked><span>Romaji</span></label>
             <label class="check-pill"><input type="checkbox" id="chkHiragana" data-script="Hiragana" checked><span>Hiragana</span></label>
             <label class="check-pill"><input type="checkbox" id="chkKatakana" data-script="Katakana" checked><span>Katakana</span></label>
+          </div>
+          <div class="reveal-scripts-row">
+            <span class="reveal-scripts-label">Sound button</span>
+            <select id="audioBtnModeSelect">
+              <option value="always" selected>Always visible</option>
+              <option value="reveal">Only after reveal</option>
+            </select>
           </div>
         </div>
       </div>
@@ -9772,7 +9795,8 @@
     strokesVisible: false,
     revealStyle: "side", // "side" | "below" - chosen on the Display Settings page
     revealScripts: { Romaji: true, Hiragana: true, Katakana: true }, // which scripts to include in the reveal
-    voice: "zundamon" // which pre-recorded VOICEVOX voice to use for kana pronunciation
+    voice: "zundamon", // which pre-recorded VOICEVOX voice to use for kana pronunciation
+    audioBtnMode: "always" // "always" visible, or "reveal" - only after showing the answer
   };
 
   function $(id){ return document.getElementById(id); }
@@ -9820,7 +9844,7 @@
   stepsMenu.addEventListener("click", function(e){ e.stopPropagation(); });
 
   // Placeholders - not wired to real features yet.
-  $("userMenuSettings").addEventListener("click", function(){
+  $("stepsMenuSettings").addEventListener("click", function(){
     console.log("Settings clicked (not implemented yet)");
     closeAllMenus();
   });
@@ -9931,9 +9955,6 @@
   // ---------- Page 1 ----------
   $("newCourseBtn").addEventListener("click", function(){
     goTo("page2", { fade:true });
-  });
-  $("howItWorksBtn").addEventListener("click", function(){
-    startTutorial({ force: true });
   });
 
   // ---------- Page 2 ----------
@@ -10239,6 +10260,7 @@
     batsuBtn.classList.remove("visible", "selected");
     maruBtn.classList.remove("visible", "selected");
     mapToggle.classList.remove("visible");
+    audioBtn.classList.remove("visible");
   }
 
   // Which character sets flank each mode's main character, and on which side.
@@ -10291,6 +10313,7 @@
           kanjiCaption.classList.add("reveal-below-large");
           kanjiCaption.innerHTML = pieces.join("<span class=\"reveal-dot\">&middot;</span>");
           kanjiCaption.hidden = false;
+          positionBelowReveal();
         }
       } else {
         setScriptClass(leftSideChar, flank ? flank.left : null);
@@ -10309,6 +10332,7 @@
       maruBtn.classList.add("visible");
     }
     mapToggle.classList.add("visible");
+    audioBtn.classList.add("visible");
   }
 
   // Positions the Romaji/Katakana labels so that, on each side, the gap to the
@@ -10376,6 +10400,25 @@
 
   window.addEventListener("resize", positionAnswerRow);
 
+  // "Below" reveal style: centers the answer text in the vertical gap
+  // between the main character and the Go button, so the gap above it
+  // (to the main character) matches the gap below it (to Go).
+  function positionBelowReveal(){
+    if (kanjiCaption.hidden || !kanjiCaption.classList.contains("reveal-below-large")) return;
+    kanjiCaption.style.top = "";
+    kanjiCaption.style.bottom = "";
+    var stageRect = charStage.getBoundingClientRect();
+    var mainRect = mainChar.getBoundingClientRect();
+    var goRect = goBtn.getBoundingClientRect();
+    var capRect = kanjiCaption.getBoundingClientRect();
+    var totalSpace = goRect.top - mainRect.bottom;
+    var gap = Math.max(0, (totalSpace - capRect.height) / 2);
+    kanjiCaption.style.top = (mainRect.bottom - stageRect.top + gap) + "px";
+    kanjiCaption.style.bottom = "auto";
+  }
+
+  window.addEventListener("resize", positionBelowReveal);
+
   function clearStrokeCanvas(){
     var ctx = strokeCanvas.getContext("2d");
     ctx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
@@ -10433,6 +10476,12 @@
       // Live-update an already-open reveal rather than waiting for the next Go.
       if (state.showExtra && state.mode !== "Kanji") displayFlankingCharacters(mainChar.textContent);
     });
+  });
+
+  var audioBtnModeSelect = $("audioBtnModeSelect");
+  audioBtnModeSelect.addEventListener("change", function(){
+    state.audioBtnMode = audioBtnModeSelect.value;
+    audioBtn.classList.toggle("reveal-only", state.audioBtnMode === "reveal");
   });
 
   batsuBtn.addEventListener("click", function(){
