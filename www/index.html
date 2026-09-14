@@ -259,17 +259,15 @@
     font-size:clamp(52px,16vw,80px);
     cursor:pointer;
   }
-  /* Multi-character mains (yōon combos like "きゃ"/"ミャ", romaji "kya") are
-     shrunk so their rendered width stays close to a single character's -
-     otherwise they'd eat into the side-character gap in positionSideCharacters(). */
-  .main-char.main-char-len2{ font-size:clamp(38px,12vw,60px); }
-  .main-char.main-char-len3plus{ font-size:clamp(30px,9.5vw,46px); }
+  /* Wide entries (yōon combos like "きゃ"/"ミャ", romaji "kya") get shrunk to fit
+     via inline font-size, computed from actual rendered width in JS (see
+     fitCharacterWidth) - character *count* is a bad proxy since Latin
+     letters are much narrower than full-width Japanese glyphs. */
   .side-char{
     top:50%; transform:translateY(-50%);
     font-size:clamp(40px,12.5vw,60px);
     opacity:.75;
   }
-  .side-char.side-char-len2plus{ font-size:clamp(28px,9vw,44px); }
   .main-char.font-mincho, .side-char.font-mincho{ font-family:'Yu Mincho','YuMincho','Hiragino Mincho ProN',serif; }
   .side-char[hidden]{ display:none; }
   .answer-row{ position:relative; width:100%; height:38px; }
@@ -10133,9 +10131,7 @@
 
   function setCharacter(character){
     mainChar.textContent = character;
-    var len = character ? character.length : 0;
-    mainChar.classList.toggle("main-char-len2", len === 2);
-    mainChar.classList.toggle("main-char-len3plus", len >= 3);
+    fitCharacterWidth(mainChar, charStage.clientWidth * 0.5);
     // onCharacterChanged: reset strokes + extra display
     state.strokesVisible = false;
     clearStrokeCanvas();
@@ -10216,10 +10212,6 @@
         rightSideChar.textContent = rightText;
         leftSideChar.hidden = !leftText;
         rightSideChar.hidden = !rightText;
-        // Multi-letter/character flanks (romaji "kya", kana "じゃ") get the
-        // same shrink treatment as a wide main character - see main-char-len2.
-        leftSideChar.classList.toggle("side-char-len2plus", leftText.length >= 2);
-        rightSideChar.classList.toggle("side-char-len2plus", rightText.length >= 2);
         positionSideCharacters();
       }
     }
@@ -10235,27 +10227,38 @@
   // Positions the Romaji/Katakana labels so that, on each side, the gap to the
   // border and the gap to the main character are exactly equal (measured from
   // actual rendered glyph widths, since character widths vary by font/text).
+  // Shrinks el's font-size (via inline style, from its CSS default) just
+  // enough that its rendered width fits within maxWidth. Character *count*
+  // is a bad proxy for this - a 2-letter romaji "su" is much narrower than a
+  // 2-glyph yōon "きゃ" - so this measures the real offsetWidth instead.
+  function fitCharacterWidth(el, maxWidth){
+    el.style.fontSize = "";
+    if (maxWidth > 0 && el.offsetWidth > maxWidth){
+      var naturalSize = parseFloat(getComputedStyle(el).fontSize);
+      el.style.fontSize = (naturalSize * (maxWidth / el.offsetWidth)) + "px";
+    }
+  }
+
   function positionSideCharacters(){
-    if (leftSideChar.hidden && rightSideChar.hidden) return;
     var containerWidth = charStage.clientWidth;
+    fitCharacterWidth(mainChar, containerWidth * 0.5);
+    if (leftSideChar.hidden && rightSideChar.hidden) return;
     var mainWidth = mainChar.offsetWidth;
     var sideRegion = (containerWidth - mainWidth) / 2; // space available on each side of the main char
 
     // Positioned independently so either side can be shown alone (e.g. only
     // one script checked in the reveal-scripts row) without the other's
     // absence breaking the math.
-    // Even after shrinking wide main characters (see main-char-len2/3plus),
-    // an extreme case (e.g. a 3-letter romaji yōon on a narrow phone) could
-    // still make a side char wider than its region - clamp so it never
-    // crosses into the main character's own space.
     if (!leftSideChar.hidden){
+      fitCharacterWidth(leftSideChar, sideRegion * 0.92);
       var lw = leftSideChar.offsetWidth;
-      var gapLeft = Math.max(0, Math.min((sideRegion - lw) / 2, sideRegion - lw));
+      var gapLeft = Math.max(0, (sideRegion - lw) / 2);
       leftSideChar.style.left = gapLeft + "px";
     }
     if (!rightSideChar.hidden){
+      fitCharacterWidth(rightSideChar, sideRegion * 0.92);
       var rw = rightSideChar.offsetWidth;
-      var gapRight = Math.max(0, Math.min((sideRegion - rw) / 2, sideRegion - rw));
+      var gapRight = Math.max(0, (sideRegion - rw) / 2);
       var mainRightEdge = containerWidth - sideRegion;
       rightSideChar.style.left = (mainRightEdge + gapRight) + "px";
     }
@@ -10407,8 +10410,15 @@
     // can't decode it, fall back to the device voice instead of staying silent.
     audioPlayer.onerror = fallbackText ? function(){ speakWithBrowserVoice(fallbackText); } : null;
     audioPlayer.pause();
-    audioPlayer.src = dataUri;
-    audioPlayer.currentTime = 0;
+    // Only seek back to 0 when replaying the exact same clip - forcing a
+    // seek right after assigning a brand-new src (before its metadata is
+    // even loaded) can nudge some WebViews into starting playback a beat
+    // late, clipping the very start of the word.
+    if (audioPlayer.src === dataUri){
+      audioPlayer.currentTime = 0;
+    } else {
+      audioPlayer.src = dataUri;
+    }
     audioPlayer.play().catch(function(){ /* ignore autoplay-policy rejections */ });
     return true;
   }
