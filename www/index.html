@@ -410,15 +410,25 @@
 
   /* ---------- Onboarding tutorial (branching intro + feature tour) ---------- */
   .tutorial-overlay{
-    position:fixed; inset:0; background:rgba(20,18,14,.55); z-index:400;
-    display:flex; align-items:center; justify-content:center; padding:20px;
+    position:fixed; inset:0; background:rgba(20,18,14,0); z-index:400;
+    display:flex; align-items:flex-start; justify-content:center; padding:20px;
+    /* Top offset matches where the page card itself starts (body's own
+       top padding plus the topbar row above it) so the tutorial lines up
+       with the same "border" as the page behind it, instead of floating
+       centered lower down whenever its content is short. */
+    padding-top:72px;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease, background-color .25s ease;
   }
+  .tutorial-overlay.showing{ background:rgba(20,18,14,.55); opacity:1; pointer-events:auto; }
   .tutorial-overlay[hidden]{ display:none; }
   .tutorial-card{
     background:var(--surface); border-radius:16px; box-shadow:var(--shadow);
     width:100%; max-width:400px; max-height:86vh; overflow-y:auto;
     padding:26px 22px;
+    transform:translateY(10px); transition:transform .25s ease;
   }
+  .tutorial-overlay.showing .tutorial-card{ transform:translateY(0); }
   .tutorial-eyebrow{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); margin:0 0 8px; }
   .tutorial-heading{ font-family:var(--font-display); font-weight:700; font-size:19px; margin:0 0 10px; line-height:1.32; }
   .tutorial-body{ font-size:13.5px; line-height:1.6; color:var(--ink-muted); margin:0 0 20px; white-space:pre-line; }
@@ -10738,7 +10748,8 @@
   ];
 
   function closeTutorial(){
-    tutorialOverlay.hidden = true;
+    tutorialOverlay.classList.remove("showing");
+    window.setTimeout(function(){ tutorialOverlay.hidden = true; }, 250);
   }
 
   function renderTutorialGate(){
@@ -10822,6 +10833,11 @@
     }
     renderTutorialGate();
     tutorialOverlay.hidden = false;
+    // Force a reflow so the fade/slide-in transition actually plays instead
+    // of the "showing" class being applied before the initial (0-opacity)
+    // style has been painted even once.
+    void tutorialOverlay.offsetWidth;
+    tutorialOverlay.classList.add("showing");
   }
 
   // ---------- Feature tour: spotlight overlay ----------
