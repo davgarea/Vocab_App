@@ -443,7 +443,8 @@
   .tutorial-slide-icon{ font-size:32px; line-height:1; margin-bottom:12px; }
   .tutorial-dots{ display:flex; gap:6px; justify-content:center; margin-top:18px; }
   .tutorial-dot{ width:6px; height:6px; border-radius:50%; background:var(--border); }
-  .tutorial-dot.active{ background:var(--accent); width:16px; border-radius:4px; transition:width .2s ease; }
+  .tutorial-dot.active{ background:var(--accent); }
+  .tutorial-body a{ color:var(--accent); font-weight:600; text-decoration:underline; white-space:nowrap; }
   .tutorial-nav-row{ display:flex; align-items:center; margin-top:18px; gap:10px; }
   .tutorial-skip-link{ background:none; border:none; color:var(--ink-muted); font-size:12px; cursor:pointer; text-decoration:underline; padding:6px 0; }
   .tutorial-nav-btns{ display:flex; gap:8px; margin-left:auto; }
@@ -10781,27 +10782,32 @@
     {
       icon: "🇯🇵",
       heading: "Japanese uses three scripts together",
-      body: "A single sentence mixes Hiragana, Katakana, and Kanji - it's not a choice between them. Once you can read all three, you can read real Japanese."
+      body: "A single sentence mixes Hiragana, Katakana, and Kanji - it's not a choice between them. Once you can read all three, you can read real Japanese.",
+      link: "https://en.wikipedia.org/wiki/Japanese_writing_system"
     },
     {
       icon: "あ",
       heading: "Hiragana - the phonetic base",
-      body: "46 basic characters (plus a few marks for extra sounds) that spell out native Japanese words and grammar. Every other script builds on these same sounds."
+      body: "46 basic characters (plus a few marks for extra sounds) that spell out native Japanese words and grammar. Every other script builds on these same sounds.",
+      link: "https://en.wikipedia.org/wiki/Hiragana"
     },
     {
       icon: "ア",
       heading: "Katakana - same sounds, different shapes",
-      body: "Katakana spells the exact same sounds as Hiragana, but is used for foreign/loan words, names, and emphasis - similar to how English uses italics."
+      body: "Katakana spells the exact same sounds as Hiragana, but is used for foreign/loan words, names, and emphasis - similar to how English uses italics.",
+      link: "https://en.wikipedia.org/wiki/Katakana"
     },
     {
       icon: "漢",
       heading: "Kanji - borrowed meaning",
-      body: "Thousands of characters borrowed from Chinese, each carrying meaning rather than just sound. Most have multiple readings depending on context - a few thousand cover everyday reading."
+      body: "Thousands of characters borrowed from Chinese, each carrying meaning rather than just sound. Most have multiple readings depending on context - a few thousand cover everyday reading.",
+      link: "https://en.wikipedia.org/wiki/Kanji"
     },
     {
       icon: "abc",
-      heading: "Romaji - just a stepping stone",
-      body: "Spelling Japanese sounds with our alphabet (like “ka”, “shi”) isn't actually used in real Japanese writing - it's training wheels this app uses to help you get started."
+      heading: "Romaji - Japanese in Latin letters",
+      body: "Romaji writes Japanese sounds with the Latin alphabet (like “ka”, “shi”). This app uses it to show how each character sounds, but it's also everywhere in Japan: company and brand names, logos and slogans, station signs for visitors, and typing Japanese on a keyboard.",
+      link: "https://en.wikipedia.org/wiki/Romanization_of_Japanese"
     }
   ];
 
@@ -10862,7 +10868,9 @@
     tutorialCard.innerHTML =
       '<div class="tutorial-slide-icon">' + slide.icon + '</div>' +
       '<h2 class="tutorial-heading">' + slide.heading + '</h2>' +
-      '<p class="tutorial-body">' + slide.body + '</p>' +
+      '<p class="tutorial-body">' + slide.body +
+        (slide.link ? ' <a href="' + slide.link + '" target="_blank" rel="noopener noreferrer">More details</a>' : '') +
+      '</p>' +
       '<div class="tutorial-dots">' + dots + '</div>' +
       '<div class="tutorial-nav-row">' +
         '<button class="tutorial-skip-link" id="tutorialSkipAll2" type="button">Skip</button>' +
