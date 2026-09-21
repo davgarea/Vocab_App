@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same as the app's own page background, so the system launch screen,
+         the in-app splash and the first screen all share one colour. -->
+    <color name="splash_background">#F2F4EC</color>
+</resources>
