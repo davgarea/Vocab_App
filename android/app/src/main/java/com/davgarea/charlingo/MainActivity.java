@@ -8,9 +8,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Draw behind the status and navigation bars so the app fills the
-        // screen exactly like the launch screen does.
-        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
+        // Must come after super.onCreate(): touching the window earlier builds
+        // it with the launch theme (which has a title bar) instead of the
+        // no-action-bar theme Capacitor switches to.
+        EdgeToEdge.enable(this);
     }
 }
