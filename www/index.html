@@ -408,6 +408,25 @@
   .map-cell-char{ font-size:18px; color:var(--ink); line-height:1; }
   .map-cell-sub{ font-size:9px; color:var(--ink-muted); line-height:1.2; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 
+  /* ---------- Splash / closing screen ---------- */
+  #splash{
+    position:fixed; inset:0; z-index:1000; background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;
+    opacity:1; transition:opacity .3s ease;
+  }
+  #splash[hidden]{ display:none; }
+  #splash.hide{ opacity:0; pointer-events:none; }
+  .splash-word{
+    font-family:var(--font-display); font-weight:700; font-size:34px; letter-spacing:.01em; color:var(--ink);
+    animation:splashIn .45s ease both;
+  }
+  .splash-word span{ color:var(--accent); }
+  @keyframes splashIn{ from{ opacity:0; transform:translateY(6px) scale(.98); } to{ opacity:1; transform:none; } }
+  .splash-bar{ width:150px; height:4px; border-radius:2px; background:var(--border); overflow:hidden; opacity:0; transition:opacity .2s ease; }
+  .splash-bar.on{ opacity:1; }
+  .splash-bar i{ display:block; height:100%; width:0; background:var(--accent); border-radius:2px; }
+  @media (prefers-reduced-motion: reduce){ .splash-word{ animation:none; } }
+
   /* ---------- Load Course screen ---------- */
   .load-body{ overflow-y:auto; min-height:0; padding:12px 16px 18px; display:flex; flex-direction:column; gap:10px; }
   .course-card{
@@ -552,6 +571,14 @@
   footer.credit{ text-align:center; margin-top:18px; font-size:11px; color:var(--ink-muted); }
 </style>
 
+<!-- Covers the page from the very first paint (before the large script below
+     has even run) so nothing flashes while the app decides which screen to
+     start on; also reused as the "closing" screen when quitting. -->
+<div id="splash">
+  <div class="splash-word" id="splashWord">Charlin<span>GO</span></div>
+  <div class="splash-bar" id="splashBar"><i id="splashBarFill"></i></div>
+</div>
+
 <div class="shell">
   <div class="topbar">
     <div class="wordmark">Charlin<span>GO</span></div>
@@ -578,6 +605,8 @@
           <button class="popover-item" id="stepsMenuTutorial" type="button">Replay tutorial</button>
           <button class="popover-item" id="stepsMenuReset" type="button">Reset study progress</button>
           <button class="popover-item" id="stepsMenuHelp" type="button">Help / Support</button>
+          <button class="popover-item" id="stepsMenuHome" type="button">Back to menu</button>
+          <button class="popover-item" id="stepsMenuQuit" type="button">Quit app</button>
         </div>
       </div>
     </div>
@@ -804,6 +833,17 @@
       <button class="map-back-btn" id="loadCloseBtn" type="button">&larr; Back</button>
     </div>
     <div class="load-body" id="loadBody"></div>
+  </div>
+</div>
+
+<div class="map-overlay" id="quitOverlay" hidden>
+  <div class="tutorial-card" style="max-width:340px; transform:none;">
+    <h2 class="tutorial-heading">Quit CharlinGO?</h2>
+    <p class="tutorial-body">Your courses and progress are saved automatically.</p>
+    <div class="course-edit-actions">
+      <button class="btn btn-primary" id="quitYes" type="button">Yes, quit</button>
+      <button class="course-secondary-btn" id="quitNo" type="button">No, stay</button>
+    </div>
   </div>
 </div>
 
@@ -10063,6 +10103,7 @@
 
   function afterShow(pageId){
     if (pageId === "page4"){
+      var alreadyInitialized = page4Initialized;
       initPage4IfNeeded();
       if (pendingCourseLoad){
         var data = pendingCourseLoad;
@@ -10070,6 +10111,14 @@
         applyLoadedCourseToPage4(data);
       } else if (showTutorialOnNextPage4){
         showTutorialOnNextPage4 = false;
+        // Coming back from another course: reset the trainer to defaults too.
+        if (alreadyInitialized){
+          applyLoadedCourseToPage4({
+            mode: DEFAULT_MODE, currentIndex: 0, audioBtnMode: "always",
+            revealScripts: { Romaji: true, Hiragana: true, Katakana: true },
+            sequenceOrder: "Random", jlptLevel: "5"
+          });
+        }
         // The page itself is still mid fade-in (.page.fade-in runs 500ms)
         // when this fires - starting the tutorial's own fade right on top
         // of that reads as two animations fighting each other. Let the
@@ -10114,8 +10163,28 @@
     goTo("page1");
   }
 
+  // ---------- Splash: quick fade-in, then out to the first real screen ----------
+  var splashEl = $("splash");
+  var SPLASH_MIN_MS = 1000; // measured from page start, so slow loads don't add extra wait
+  window.setTimeout(function(){
+    splashEl.classList.add("hide");
+    window.setTimeout(function(){ splashEl.hidden = true; }, 320);
+  }, Math.max(0, SPLASH_MIN_MS - performance.now()));
+
   // ---------- Page 1 ----------
+  // A new course starts from clean defaults, not from whatever the previously
+  // open course had picked on the settings page.
+  function resetNewCourseForm(){
+    courseNameInput.value = "";
+    [[themeSelect, "Light Mode"], [fontSelect, "Default Font"], [revealStyleSelect, "side"], [voiceSelect, "zundamon"]]
+      .forEach(function(p){
+        p[0].value = p[1];
+        p[0].dispatchEvent(new Event("change"));
+      });
+  }
+
   $("newCourseBtn").addEventListener("click", function(){
+    resetNewCourseForm();
     showTutorialOnNextPage4 = true;
     goTo("page2", { fade:true });
   });
@@ -11217,6 +11286,54 @@
     startTutorial();
   });
 
+  // ---------- Back to menu / Quit ----------
+  $("stepsMenuHome").addEventListener("click", function(){
+    closeAllMenus();
+    saveCourse();
+    closeMap();
+    goTo("page1", { fade:true });
+  });
+
+  var quitOverlay = $("quitOverlay");
+  $("stepsMenuQuit").addEventListener("click", function(){
+    closeAllMenus();
+    quitOverlay.hidden = false;
+  });
+  $("quitNo").addEventListener("click", function(){ quitOverlay.hidden = true; });
+  quitOverlay.addEventListener("click", function(e){ if (e.target === quitOverlay) quitOverlay.hidden = true; });
+
+  $("quitYes").addEventListener("click", function(){
+    quitOverlay.hidden = true;
+    saveCourse();
+    // Brand screen with a progress bar, then really exit. Everything is
+    // already written to storage as it changes (and just now again), so the
+    // bar is a short, deliberate pause rather than waiting on a slow save.
+    var word = $("splashWord"), bar = $("splashBar"), fill = $("splashBarFill");
+    word.style.animation = "none";
+    void word.offsetWidth;
+    word.style.animation = "";
+    splashEl.hidden = false;
+    void splashEl.offsetWidth;
+    splashEl.classList.remove("hide");
+    fill.style.transition = "none";
+    fill.style.width = "0";
+    bar.classList.add("on");
+    void fill.offsetWidth;
+    fill.style.transition = "width 1.4s ease-in-out";
+    fill.style.width = "100%";
+    window.setTimeout(function(){
+      var cap = window.Capacitor;
+      var appPlugin = cap && cap.Plugins && cap.Plugins.App;
+      if (appPlugin && appPlugin.exitApp){
+        appPlugin.exitApp();
+      } else {
+        // Plain browser (no native app to close): just say so.
+        bar.classList.remove("on");
+        word.textContent = "You can close this tab now.";
+      }
+    }, 1600);
+  });
+
   function initPage4IfNeeded(){
     if (page4Initialized) return;
     page4Initialized = true;
@@ -11251,11 +11368,13 @@
     });
     applyAudioBtnMode();
     styleModeButtons();
+    styleTrainerChrome();
     jlptRow.hidden = state.mode !== "Kanji";
     updateStageHeight();
     updateRevealScriptsRow(state.mode);
     updateSequenceLabels(state.mode);
     showCharacterBasedOnSelection();
+    saveCourse();
   }
 
   // keep page4 chrome in sync if theme/font settings change after a visit
