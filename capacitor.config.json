@@ -10,6 +10,11 @@
       "launchFadeOutDuration": 150,
       "backgroundColor": "#F2F4EC",
       "showSpinner": false
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "LIGHT",
+      "initialViewportFitValueHint": "cover"
     }
   }
 }
