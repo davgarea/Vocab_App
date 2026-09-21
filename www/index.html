@@ -408,6 +408,34 @@
   .map-cell-char{ font-size:18px; color:var(--ink); line-height:1; }
   .map-cell-sub{ font-size:9px; color:var(--ink-muted); line-height:1.2; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 
+  /* ---------- Load Course screen ---------- */
+  .load-body{ overflow-y:auto; min-height:0; padding:12px 16px 18px; display:flex; flex-direction:column; gap:10px; }
+  .course-card{
+    display:flex; align-items:center; gap:12px; padding:12px 14px;
+    border:1px solid var(--border); border-radius:12px; background:var(--surface-2);
+    cursor:pointer; transition:border-color .15s ease;
+  }
+  .course-card:hover, .course-card:focus-visible{ border-color:var(--accent); }
+  .course-info{ flex:1; min-width:0; }
+  .course-name{ font-family:var(--font-display); font-weight:700; font-size:15px; margin-bottom:4px; overflow-wrap:anywhere; }
+  .course-meta{ font-size:11.5px; color:var(--ink-muted); line-height:1.5; }
+  .course-edit-btn, .course-secondary-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--ink);
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:8px 13px; cursor:pointer; flex-shrink:0;
+  }
+  .course-edit-btn:hover, .course-secondary-btn:hover{ border-color:var(--accent); }
+  .course-danger-btn{
+    font-family:var(--font-body); font-size:13px; font-weight:600; color:#FFFFFF;
+    background:#C0463C; border:1px solid #C0463C; border-radius:10px; padding:11px 16px; cursor:pointer;
+  }
+  .course-edit-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .course-edit-actions .btn{ padding:10px 20px; font-size:14px; }
+  .course-edit-note{ font-size:13px; line-height:1.5; color:var(--ink-muted); margin:0; }
+  :root.app-theme-dark .load-body::-webkit-scrollbar{ width:8px; }
+  :root.app-theme-dark .load-body::-webkit-scrollbar-track{ background:var(--surface); }
+  :root.app-theme-dark .load-body::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
+
   /* ---------- Onboarding tutorial (branching intro + feature tour) ---------- */
   .tutorial-overlay{
     position:fixed; inset:0; background:rgba(20,18,14,0); z-index:400;
@@ -766,6 +794,16 @@
       <button class="map-back-btn" id="mapBackBtn" type="button">&larr; Back</button>
     </div>
     <div class="map-grid" id="mapGrid"></div>
+  </div>
+</div>
+
+<div class="map-overlay" id="loadOverlay" hidden>
+  <div class="map-panel">
+    <div class="map-header">
+      <div class="map-title" id="loadTitle">Load course</div>
+      <button class="map-back-btn" id="loadCloseBtn" type="button">&larr; Back</button>
+    </div>
+    <div class="load-body" id="loadBody"></div>
   </div>
 </div>
 
@@ -9767,60 +9805,109 @@
   // weight (default 3). Marking (batsu) pushes it up (shown more often
   // under SRS); marking (maru) pushes it down. Persisted in localStorage so
   // it survives reloads, same as the course settings below.
-  var SRS_STORAGE_KEY = "charlingo_srs_weights_v1";
+  var LEGACY_SRS_KEY = "charlingo_srs_weights_v1";
   var SRS_DEFAULT_WEIGHT = 3;
   var SRS_MIN_WEIGHT = 1;
   var SRS_MAX_WEIGHT = 8;
 
-  function loadSrsWeights(){
-    try {
-      var raw = localStorage.getItem(SRS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
+  // Progress is per course: the active course's weights live on the course
+  // object itself (see "Course persistence" below) and are swapped in here
+  // whenever a course is created or loaded.
+  var srsWeights = {};
   function saveSrsWeights(){
-    try { localStorage.setItem(SRS_STORAGE_KEY, JSON.stringify(srsWeights)); } catch (e) {}
+    var c = currentCourse();
+    if (c){ c.srs = srsWeights; persistCourses(); }
   }
-
-  var srsWeights = loadSrsWeights();
 
   function srsKey(mode, character){ return mode + ":" + character; }
 
   // ---------- Course persistence (settings + where you left off) ----------
-  var COURSE_STORAGE_KEY = "charlingo_course_v1";
+  // Any number of named courses, each with its own settings, position and
+  // SRS progress: { id, name, created, lastPlayed, data, srs }.
+  var COURSES_KEY = "charlingo_courses_v2";
+  var LEGACY_COURSE_KEY = "charlingo_course_v1";
+  var UI_LANG_KEY = "charlingo_ui_lang_v1";
   var pendingCourseLoad = null;
+  var currentCourseId = null;
 
-  function loadSavedCourse(){
+  function readJson(key){
     try {
-      var raw = localStorage.getItem(COURSE_STORAGE_KEY);
+      var raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
     } catch (e) {
       return null;
     }
   }
 
-  function saveCourse(){
+  function newCourseId(){ return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function loadCourses(){
+    var list = readJson(COURSES_KEY);
+    if (Array.isArray(list)) return list;
+    // Carry over the single course saved by the previous version, if any.
+    var legacy = readJson(LEGACY_COURSE_KEY);
+    if (!legacy) return [];
+    var now = Date.now();
+    list = [{
+      id: newCourseId(),
+      name: legacy.courseName || "My Japanese Study Course",
+      created: now, lastPlayed: now,
+      data: legacy,
+      srs: readJson(LEGACY_SRS_KEY) || {}
+    }];
     try {
-      var data = {
-        uiLang: uiLangSelect.value,
-        learningLang: learningLangSelect.value,
-        courseName: courseNameInput.value,
-        theme: state.theme,
-        font: state.font,
-        revealStyle: state.revealStyle,
-        voice: state.voice,
-        mode: state.mode,
-        currentIndex: state.currentIndex,
-        audioBtnMode: state.audioBtnMode,
-        revealScripts: state.revealScripts,
-        sequenceOrder: sequenceSelect.value,
-        jlptLevel: jlptSelect.value
-      };
-      localStorage.setItem(COURSE_STORAGE_KEY, JSON.stringify(data));
-      loadCourseBtn.disabled = false;
+      localStorage.setItem(COURSES_KEY, JSON.stringify(list));
+      if (legacy.uiLang === "English") localStorage.setItem(UI_LANG_KEY, "English");
     } catch (e) {}
+    return list;
+  }
+
+  var courses = loadCourses();
+
+  function persistCourses(){
+    try { localStorage.setItem(COURSES_KEY, JSON.stringify(courses)); } catch (e) {}
+  }
+
+  function findCourse(id){
+    for (var i = 0; i < courses.length; i++){
+      if (courses[i].id === id) return courses[i];
+    }
+    return null;
+  }
+  function currentCourse(){ return findCourse(currentCourseId); }
+
+  function refreshLoadCourseBtn(){ loadCourseBtn.disabled = courses.length === 0; }
+
+  function createCourse(name){
+    var now = Date.now();
+    var c = { id: newCourseId(), name: name, created: now, lastPlayed: now, data: {}, srs: {} };
+    courses.push(c);
+    currentCourseId = c.id;
+    srsWeights = c.srs;
+    persistCourses();
+    refreshLoadCourseBtn();
+    return c;
+  }
+
+  function saveCourse(){
+    var c = currentCourse();
+    if (!c) return;
+    c.data = {
+      uiLang: uiLangSelect.value,
+      learningLang: learningLangSelect.value,
+      theme: state.theme,
+      font: state.font,
+      revealStyle: state.revealStyle,
+      voice: state.voice,
+      mode: state.mode,
+      currentIndex: state.currentIndex,
+      audioBtnMode: state.audioBtnMode,
+      revealScripts: state.revealScripts,
+      sequenceOrder: sequenceSelect.value,
+      jlptLevel: jlptSelect.value
+    };
+    c.lastPlayed = Date.now();
+    persistCourses();
   }
 
   function getSrsWeight(mode, character){
@@ -10032,8 +10119,18 @@
   });
 
   page0Continue.addEventListener("click", function(){
+    try { localStorage.setItem(UI_LANG_KEY, uiLangSelect.value); } catch (e) {}
     goTo("page1"); // instant, matches original (no fade 0 -> 1)
   });
+
+  // The language picker is a one-time, first-launch screen: once a language
+  // has been chosen, every later launch starts on the welcome screen.
+  var savedUiLang = null;
+  try { savedUiLang = localStorage.getItem(UI_LANG_KEY); } catch (e) {}
+  if (savedUiLang){
+    uiLangSelect.value = savedUiLang;
+    goTo("page1");
+  }
 
   // ---------- Page 1 ----------
   $("newCourseBtn").addEventListener("click", function(){
@@ -10042,20 +10139,137 @@
   });
 
   var loadCourseBtn = $("loadCourseBtn");
-  if (loadSavedCourse()) loadCourseBtn.disabled = false;
-  loadCourseBtn.addEventListener("click", function(){
-    var data = loadSavedCourse();
-    if (!data) return;
+  refreshLoadCourseBtn();
+
+  // ---- Load Course screen: saved courses as cards, with rename / delete ----
+  var loadOverlay = $("loadOverlay");
+  var loadBody = $("loadBody");
+  var loadTitle = $("loadTitle");
+
+  function fmtDate(ts){
+    return new Date(ts).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+  function fmtDateTime(ts){
+    return fmtDate(ts) + ", " + new Date(ts).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+  function makeEl(tag, cls, text){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function openLoadOverlay(){
+    renderLoadList();
+    loadOverlay.hidden = false;
+  }
+  function closeLoadOverlay(){ loadOverlay.hidden = true; }
+
+  function renderLoadList(){
+    loadTitle.textContent = "Load course";
+    loadBody.innerHTML = "";
+    courses.slice().sort(function(a, b){ return b.lastPlayed - a.lastPlayed; }).forEach(function(c){
+      var card = makeEl("div", "course-card");
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      var info = makeEl("div", "course-info");
+      info.appendChild(makeEl("div", "course-name", c.name));
+      info.appendChild(makeEl("div", "course-meta", "Created: " + fmtDate(c.created)));
+      info.appendChild(makeEl("div", "course-meta", "Last played: " + fmtDateTime(c.lastPlayed)));
+      var edit = makeEl("button", "course-edit-btn", "Edit");
+      edit.type = "button";
+      edit.addEventListener("click", function(e){ e.stopPropagation(); renderEditCourse(c.id); });
+      card.appendChild(info);
+      card.appendChild(edit);
+      card.addEventListener("click", function(){ loadCourseById(c.id); });
+      card.addEventListener("keydown", function(e){ if (e.key === "Enter") loadCourseById(c.id); });
+      loadBody.appendChild(card);
+    });
+  }
+
+  function renderEditCourse(id, confirmingDelete){
+    var c = findCourse(id);
+    if (!c){ renderLoadList(); return; }
+    loadTitle.textContent = "Edit course";
+    loadBody.innerHTML = "";
+
+    if (confirmingDelete){
+      loadBody.appendChild(makeEl("p", "course-edit-note",
+        "Delete “" + c.name + "”? Its settings and progress will be removed and this can't be undone."));
+      var confirmRow = makeEl("div", "course-edit-actions");
+      var yes = makeEl("button", "course-danger-btn", "Yes, delete");
+      var keep = makeEl("button", "course-secondary-btn", "Keep it");
+      yes.type = keep.type = "button";
+      yes.addEventListener("click", function(){ deleteCourse(id); });
+      keep.addEventListener("click", function(){ renderEditCourse(id); });
+      confirmRow.appendChild(yes);
+      confirmRow.appendChild(keep);
+      loadBody.appendChild(confirmRow);
+      return;
+    }
+
+    var label = makeEl("label", "field-label", "Course name");
+    label.htmlFor = "courseRenameInput";
+    var input = document.createElement("input");
+    input.type = "text";
+    input.id = "courseRenameInput";
+    input.maxLength = 40;
+    input.value = c.name;
+    var msg = makeEl("p", "course-edit-note", "");
+    var row = makeEl("div", "course-edit-actions");
+    var save = makeEl("button", "btn btn-primary", "Save");
+    var cancel = makeEl("button", "course-secondary-btn", "Cancel");
+    var del = makeEl("button", "course-danger-btn", "Delete course");
+    save.type = cancel.type = del.type = "button";
+    save.addEventListener("click", function(){
+      var name = input.value.trim();
+      if (!name){ msg.textContent = "Please enter a name."; return; }
+      c.name = name;
+      persistCourses();
+      renderLoadList();
+    });
+    cancel.addEventListener("click", renderLoadList);
+    del.addEventListener("click", function(){ renderEditCourse(id, true); });
+    row.appendChild(save);
+    row.appendChild(cancel);
+    loadBody.appendChild(label);
+    loadBody.appendChild(input);
+    loadBody.appendChild(msg);
+    loadBody.appendChild(row);
+    loadBody.appendChild(del);
+  }
+
+  function deleteCourse(id){
+    courses = courses.filter(function(c){ return c.id !== id; });
+    if (currentCourseId === id){ currentCourseId = null; srsWeights = {}; }
+    persistCourses();
+    refreshLoadCourseBtn();
+    if (courses.length === 0) closeLoadOverlay(); else renderLoadList();
+  }
+
+  function loadCourseById(id){
+    var c = findCourse(id);
+    if (!c) return;
+    var data = c.data || {};
+    currentCourseId = c.id;
+    srsWeights = c.srs || (c.srs = {});
+    c.lastPlayed = Date.now();
+    persistCourses();
     if (data.uiLang) uiLangSelect.value = data.uiLang;
     if (data.learningLang) learningLangSelect.value = data.learningLang;
-    if (data.courseName) courseNameInput.value = data.courseName;
+    courseNameInput.value = c.name;
     if (data.theme){ themeSelect.value = data.theme; state.theme = data.theme; applySimTheme(data.theme); applyShellTheme(data.theme); }
     if (data.font){ fontSelect.value = data.font; state.font = data.font; }
     if (data.revealStyle){ revealStyleSelect.value = data.revealStyle; state.revealStyle = data.revealStyle; }
     if (data.voice){ voiceSelect.value = data.voice; state.voice = data.voice; }
     pendingCourseLoad = data;
+    closeLoadOverlay();
     goTo("page4", { fade:true });
-  });
+  }
+
+  loadCourseBtn.addEventListener("click", openLoadOverlay);
+  $("loadCloseBtn").addEventListener("click", closeLoadOverlay);
+  loadOverlay.addEventListener("click", function(e){ if (e.target === loadOverlay) closeLoadOverlay(); });
 
   // ---------- Page 2 ----------
   var page2Message = $("page2Message");
@@ -10096,7 +10310,18 @@
   });
 
   page2Continue.addEventListener("click", function(){
+    if (!courseNameInput.value.trim()){
+      page2Message.textContent = "Please give your course a name first.";
+      page2Message.classList.add("notice");
+      courseNameInput.focus();
+      return;
+    }
     goTo("page3", { fade:true });
+  });
+  courseNameInput.addEventListener("input", function(){
+    if (learningLangSelect.value !== "Japanese") return;
+    page2Message.textContent = "Please select the language you want to study the characters";
+    page2Message.classList.remove("notice");
   });
 
   // ---------- Page 3 ----------
@@ -10167,6 +10392,7 @@
   });
 
   page3Continue.addEventListener("click", function(){
+    createCourse(courseNameInput.value.trim());
     saveCourse();
     goTo("page4", { fade:true });
   });
