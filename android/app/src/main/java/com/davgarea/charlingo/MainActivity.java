@@ -8,6 +8,8 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Custom plugins must be registered before super.onCreate().
+        registerPlugin(ThemeBridge.class);
         super.onCreate(savedInstanceState);
         // Must come after super.onCreate(): touching the window earlier builds
         // it with the launch theme (which has a title bar) instead of the
