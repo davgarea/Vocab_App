@@ -13,6 +13,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Custom plugins must be registered before super.onCreate().
         registerPlugin(ThemeBridge.class);
+        registerPlugin(OrientationBridge.class);
 
         // Start in the theme the user last picked inside the app (saved by
         // ThemeBridge), not whatever the phone's system theme is. Must be set
