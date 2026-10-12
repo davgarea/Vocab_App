@@ -223,7 +223,6 @@
   .bottom-row .dd-trigger{ flex:1; }
   .field-col .dd-trigger{ width:100%; }
   .voice-picker .dd-trigger{ flex:1; }
-  .jlpt-row .dd-trigger{ flex:1; padding:8px 10px; font-size:13px; }
   .sim-panel .dd-trigger{ max-width:220px; }
   .sim-dark .dd-trigger{ background:#3C3C3C; color:#fff; border-color:#3C3C3C; }
   .sim-dark .dd-trigger .dd-chev{ color:#B8B8B8; }
@@ -376,7 +375,6 @@
 
   /* --- Page 4: the character trainer --- */
   #page4.page{ gap:0; }
-  .mode-row{ display:flex; gap:8px; margin-bottom:14px; }
   .mode-btn{
     flex:1; padding:9px 4px; border-radius:9px; border:1px solid transparent;
     font-family:var(--font-display); font-weight:600; font-size:13px; cursor:pointer;
@@ -411,6 +409,92 @@
      per stroke, each showing that stroke in accent colour over the earlier
      strokes in ink and the rest of the character as a faint guide - the
      same layout convention stroke-order reference charts commonly use. */
+  /* ---------- Mode letter, script square, set dropdown, save button ---------- */
+  .top-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .mode-letter{ font-family:var(--font-display); font-weight:800; font-size:24px; line-height:1; color:var(--accent); min-width:14px; }
+  .mode-letter[hidden]{ display:none; }
+  .set-row{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .script-btn{
+    position:relative; flex:none; width:46px; height:46px; border-radius:12px; border:none; padding:0;
+    background:var(--accent); color:var(--accent-ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size:23px; line-height:1;
+  }
+  .script-btn::after{
+    content:""; position:absolute; right:5px; bottom:5px;
+    border:3.5px solid transparent; border-top-color:currentColor; border-bottom:none; opacity:.7;
+  }
+  .set-row .dd-trigger{ flex:1; padding:12px 12px 12px 13px; }
+  .practice-pane{ display:flex; flex-direction:column; gap:16px; }
+  .practice-pane[hidden], .quiz-pane[hidden]{ display:none; }
+  .stage-tools-center{ position:absolute; top:8px; left:50%; transform:translateX(-50%); display:flex; z-index:2; }
+  #saveBtn[hidden]{ display:none; }
+  #saveBtn.saved{ color:var(--accent); opacity:1; }
+  .trainer-stage.th-light #saveBtn.saved, .trainer-stage.th-dark #saveBtn.saved{ color:var(--accent); }
+  .page-subtitle{ font-family:var(--font-display); font-weight:700; font-size:15px; margin:6px 0 0; }
+
+  /* Quiz (Prepare / Test) shown inline in the card */
+  .quiz-body{ display:flex; flex-direction:column; gap:14px; min-height:260px; }
+  .quiz-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .quiz-end{ background:none; border:none; color:var(--ink-muted); font-size:13px; text-decoration:underline; cursor:pointer; padding:4px 0; }
+  .quiz-intro{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:20px 4px 8px; }
+  .quiz-intro-title{ font-family:var(--font-display); font-weight:700; font-size:22px; }
+  .quiz-intro-set{ font-size:14px; font-weight:600; color:var(--ink); background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:7px 14px; }
+  .quiz-toggle{
+    font-family:var(--font-body); font-size:13px; padding:7px 14px; border-radius:999px; cursor:pointer;
+    background:none; color:var(--ink-muted); border:1px solid var(--border);
+  }
+  .quiz-toggle.on{ background:var(--accent-soft); border-color:var(--accent); color:#1B1B1B; }
+  .quiz-intro .btn{ width:100%; max-width:260px; margin-top:6px; }
+
+  /* Pop-up menu pieces (script picker, mode menu, grouped dropdowns) */
+  .dd-group{ font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-muted); padding:10px 12px 4px; }
+  .dd-pop.dd-dark .dd-group{ color:#B8B8B8; }
+  .pm-badge{
+    flex:none; min-width:30px; height:30px; padding:0 6px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:var(--accent-ink); font-family:var(--font-display); font-weight:800; font-size:15px;
+  }
+  .pm-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .pm-sub{ font-size:12px; font-weight:400; color:var(--ink-muted); }
+  .dd-opt:has(.pm-badge){ justify-content:flex-start; }
+  .dd-opt:has(.pm-badge) .dd-check{ margin-left:auto; }
+
+  /* Save-to popover: heart (Favourites) / list icons, then the lists */
+  .save-pop{ padding:8px; }
+  .save-row{ display:flex; gap:8px; justify-content:center; }
+  .save-icon-btn{
+    width:52px; height:52px; border-radius:14px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+  }
+  .save-icon-btn svg{ width:24px; height:24px; display:block; }
+  .save-icon-btn.on{ color:var(--accent); border-color:var(--accent); background:rgba(217,99,90,.12); }
+  .save-head{ display:flex; align-items:center; gap:6px; padding:0 2px 6px; }
+  .save-title{ font-size:12px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-muted); }
+  .save-mini-btn{
+    flex:none; width:34px; height:34px; border-radius:10px; border:none; background:none; color:var(--ink-muted);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+  }
+  .save-mini-btn svg{ width:18px; height:18px; display:block; }
+  .save-mini-btn.armed{ color:#D9635A; background:rgba(217,99,90,.14); }
+  .save-add{ color:var(--accent-ink); background:var(--accent); }
+  .save-empty{ font-size:13px; color:var(--ink-muted); padding:4px 6px 10px; line-height:1.4; }
+  .save-list-row{ display:flex; align-items:center; gap:2px; }
+  .save-list-pick{
+    flex:1; min-width:0; display:flex; align-items:center; gap:10px; padding:8px 8px; border-radius:9px;
+    border:none; background:none; color:inherit; font-family:var(--font-body); font-size:15px; text-align:left; cursor:pointer;
+  }
+  .save-list-pick:hover{ background:rgba(130,130,130,.16); }
+  .save-check{
+    flex:none; width:22px; height:22px; border-radius:7px; border:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:center; color:var(--accent-ink);
+  }
+  .save-list-pick.on .save-check{ background:var(--accent); border-color:var(--accent); }
+  .save-check svg{ width:14px; height:14px; display:block; }
+  .save-list-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .save-create{ display:flex; gap:6px; align-items:center; padding:8px 2px 0; border-top:1px solid var(--border); margin-top:6px; }
+  .save-create input{ flex:1; min-width:0; padding:8px 10px; font-size:14px; }
+
   /* Writing pad (pencil icon): same greys as the trainer stage - dark mode
      #2B2B2B / #3C3C3C, light mode #FBFAF6 / #dae0e3. */
   #writeOverlay{
@@ -589,10 +673,6 @@
   .trainer-stage.th-dark.sol-green .reveal-below-large span{ color:#6CC28A; }
   .trainer-stage.th-dark.sol-plain .reveal-below-large span{ color:#FFFFFF; }
 
-  .jlpt-row{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-  .jlpt-row[hidden]{ display:none; }
-  .jlpt-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); white-space:nowrap; }
-  .jlpt-row select{ flex:1; padding:8px 10px; font-size:13px; }
 
   .kanji-caption{
     position:absolute; left:50%; bottom:6px; transform:translateX(-50%);
@@ -906,12 +986,15 @@
 
 <div class="shell">
   <div class="topbar">
+    <div class="top-left">
     <div class="wordmark" id="wordmark">Charlin<span>GO</span></div>
     <button class="modes-btn" id="modesBtn" type="button" aria-label="Modes" data-i18n-aria="modesAria" hidden>
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </button>
+    <span class="mode-letter" id="modeLetter" hidden>P</span>
+    </div>
     <div class="topbar-right">
       <button class="lang-btn" id="langBtn" type="button" aria-label="Language" data-i18n-aria="langBtnAria">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -932,7 +1015,7 @@
       <div class="menu-anchor" id="stepsAnchor">
         <button class="steps-toggle" id="stepsToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="App menu" data-i18n-aria="appMenuAria" disabled>
           <div class="steps" id="steps">
-            <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i><i data-i="3"></i>
+            <i data-i="0"></i><i data-i="1"></i><i data-i="2"></i>
           </div>
         </button>
         <div class="popover-menu" id="stepsMenu" hidden>
@@ -1039,6 +1122,30 @@
         </div>
       </div>
 
+      <h2 class="page-subtitle" data-i18n="pWriteTitle">Writing pad</h2>
+      <div class="reveal-setting">
+        <label class="field-label" for="writePosSelect" data-i18n="writePosLabel">Drawing section (portrait)</label>
+          <select id="writePosSelect">
+            <option value="top" data-i18n="optTop">Top</option>
+            <option value="bottom" data-i18n="optBottom">Bottom</option>
+          </select>
+      </div>
+      <div class="reveal-setting">
+        <label class="field-label" for="writeRotateSelect" data-i18n="writeRotateLabel">Rotate window with phone</label>
+          <select id="writeRotateSelect">
+            <option value="on" data-i18n="optOn">On</option>
+            <option value="off" data-i18n="off">Off</option>
+          </select>
+      </div>
+      <div class="reveal-setting">
+        <label class="field-label" for="writeLandSelect" data-i18n="writeLandLabel">Drawing section (landscape)</label>
+          <select id="writeLandSelect">
+            <option value="left" data-i18n="optLeft">Left</option>
+            <option value="right" data-i18n="optRight">Right</option>
+          </select>
+      </div>
+      <p class="copy" data-i18n="writeSplitHint">Split view (icon at the top of the writing pad) shows drawing and watching in two halves. Only that window can turn sideways.</p>
+
       <button class="btn btn-primary" id="page3Continue" data-i18n="continue">Continue</button>
       <button data-i18n="backArrow" class="btn" id="page3Back" type="button">&larr; Back</button>
     </section>
@@ -1069,49 +1176,15 @@
       <button data-i18n="backArrow" class="btn" id="pageAudioBack" type="button">&larr; Back</button>
     </section>
 
-    <!-- Page: Writing pad settings -->
-    <section class="page page-compact" id="pageWrite">
-      <h1 class="page-title" style="font-size:18px;" data-i18n="pWriteTitle">Writing pad</h1>
-      <div class="reveal-setting">
-        <label class="field-label" for="writePosSelect" data-i18n="writePosLabel">Drawing section (portrait)</label>
-          <select id="writePosSelect">
-            <option value="top" data-i18n="optTop">Top</option>
-            <option value="bottom" data-i18n="optBottom">Bottom</option>
-          </select>
-      </div>
-      <div class="reveal-setting">
-        <label class="field-label" for="writeRotateSelect" data-i18n="writeRotateLabel">Rotate window with phone</label>
-          <select id="writeRotateSelect">
-            <option value="on" data-i18n="optOn">On</option>
-            <option value="off" data-i18n="off">Off</option>
-          </select>
-      </div>
-      <div class="reveal-setting">
-        <label class="field-label" for="writeLandSelect" data-i18n="writeLandLabel">Drawing section (landscape)</label>
-          <select id="writeLandSelect">
-            <option value="left" data-i18n="optLeft">Left</option>
-            <option value="right" data-i18n="optRight">Right</option>
-          </select>
-      </div>
-      <p class="copy" data-i18n="writeSplitHint">Split view (icon at the top of the writing pad) shows drawing and watching in two halves. Only that window can turn sideways.</p>
-      <button class="btn btn-primary" id="pageWriteContinue" data-i18n="continue">Continue</button>
-      <button data-i18n="backArrow" class="btn" id="pageWriteBack" type="button">&larr; Back</button>
-    </section>
-
     <!-- Page 4: Character trainer -->
     <section class="page" id="page4">
-      <div class="mode-row" id="modeButtons"></div>
-      <div class="jlpt-row" id="jlptRow" hidden>
-        <span data-i18n="jlptLabel" class="jlpt-label">JLPT level</span>
-        <select id="jlptSelect">
-          <option value="5">N5</option>
-          <option value="4">N4</option>
-          <option value="3">N3</option>
-          <option value="2">N2</option>
-          <option value="1">N1</option>
-          <option data-i18n="jlptAll" value="all">All (N5-N1)</option>
-        </select>
+      <div class="set-row" id="setRow">
+        <button class="script-btn" id="scriptBtn" type="button" aria-haspopup="listbox" aria-label="Script" data-i18n-aria="scriptAria">
+          <span id="scriptBtnChar">あ</span>
+        </button>
+        <select id="jlptSelect"></select>
       </div>
+      <div class="practice-pane" id="practicePane">
       <div class="stage-wrap">
         <div class="trainer-stage th-light" id="trainerStage">
           <div class="stage-tools-left">
@@ -1128,6 +1201,9 @@
                 <rect x="11.9" y="3" width="2.8" height="4.3" rx="1" stroke="currentColor" stroke-width="1.1" opacity=".3"/>
               </svg>
             </button>
+          </div>
+          <div class="stage-tools-center">
+            <button class="tool-btn" id="saveBtn" type="button" aria-label="Save character" data-i18n-aria="saveAria"></button>
           </div>
           <div class="stage-tools">
             <button class="tool-btn" id="mapToggle" type="button" aria-label="View all characters in this section" data-i18n-aria="mapAria">
@@ -1224,6 +1300,10 @@
           </div>
         </div>
       </div>
+      </div>
+      <div class="quiz-pane" id="quizPane" hidden>
+        <div class="quiz-body" id="quizBody"></div>
+      </div>
     </section>
   </div>
 </div>
@@ -1294,26 +1374,6 @@
       <button class="map-back-btn" id="settingsBackBtn" type="button" data-i18n="backArrow">&larr; Back</button>
     </div>
     <div class="load-body" id="settingsBody"></div>
-  </div>
-</div>
-
-<div class="map-overlay" id="modesOverlay" hidden>
-  <div class="map-panel">
-    <div class="map-header">
-      <div class="map-title" id="modesTitle">Modes</div>
-      <button class="map-back-btn" id="modesBackBtn" type="button" data-i18n="backArrow">&larr; Back</button>
-    </div>
-    <div class="load-body" id="modesBody"></div>
-  </div>
-</div>
-
-<div class="map-overlay" id="quizOverlay" hidden>
-  <div class="map-panel">
-    <div class="map-header">
-      <div class="map-title" id="quizTitle">Prepare</div>
-      <button class="map-back-btn" id="quizBackBtn" type="button" data-i18n="backArrow">&larr; Back</button>
-    </div>
-    <div class="load-body" id="quizBody"></div>
   </div>
 </div>
 
@@ -1397,8 +1457,8 @@
       "ミャ","ミュ","ミョ","リャ","リュ","リョ","ギャ","ギュ","ギョ","ジャ","ジュ","ジョ","ビャ","ビュ","ビョ","ピャ","ピュ","ピョ"
     ]
   };
-  var MODE_ORDER = ["Romaji","Hiragana","Katakana","Kanji"];
-  var DEFAULT_MODE = "Romaji";
+  var MODE_ORDER = ["Hiragana","Katakana","Kanji"];
+  var DEFAULT_MODE = "Hiragana";
 
   // Section boundaries shared by the practice arrays above and the "map"
   // overview grid, so kana are always grouped the way textbooks teach them.
@@ -5850,15 +5910,69 @@
   };
 
 
+  // ---------- Character sets: JLPT levels + the learner's own lists ----------
+  // A "set" value is "all" or a JLPT level "5".."1" (kanji only), "fav" for
+  // the Favourites list, or "list:<id>" for a list the learner created.
+  // Lists are app-wide (not per course) and can hold characters of any
+  // script; when a script is selected only its own characters are used.
+  var LISTS_KEY = "charlingo_lists_v1";
+  var userLists = (function(){
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(LISTS_KEY)); } catch (e) {}
+    var out = { fav: [], lists: [] };
+    if (raw && Array.isArray(raw.fav)) out.fav = raw.fav.filter(function(c){ return typeof c === "string"; });
+    if (raw && Array.isArray(raw.lists)){
+      out.lists = raw.lists.filter(function(l){ return l && typeof l.id === "string" && typeof l.name === "string" && Array.isArray(l.chars); });
+    }
+    return out;
+  })();
+  function saveLists(){
+    try { localStorage.setItem(LISTS_KEY, JSON.stringify(userLists)); } catch (e) {}
+  }
+  function findList(id){
+    for (var i = 0; i < userLists.lists.length; i++) if (userLists.lists[i].id === id) return userLists.lists[i];
+    return null;
+  }
+  function charScript(ch){
+    if (KANJI_BY_CHAR[ch]) return "Kanji";
+    if (CHAR_SETS.Hiragana.indexOf(ch) !== -1) return "Hiragana";
+    if (CHAR_SETS.Katakana.indexOf(ch) !== -1) return "Katakana";
+    return null;
+  }
+  function setCharsOfScript(chars, mode){
+    return chars.filter(function(c){ return charScript(c) === mode; });
+  }
+  // The characters a set value stands for, within one script.
+  function charsForSet(mode, value){
+    if (value === "fav") return setCharsOfScript(userLists.fav, mode);
+    if (value && value.indexOf("list:") === 0){
+      var l = findList(value.slice(5));
+      return l ? setCharsOfScript(l.chars, mode) : [];
+    }
+    if (mode === "Kanji") return getKanjiSet(value === "all" ? "all" : (value || "5"));
+    return CHAR_SETS[mode];
+  }
+  function defaultSetFor(mode){ return mode === "Kanji" ? "5" : "all"; }
+  function isValidSet(mode, value){
+    if (value === "all") return true;
+    if (value === "fav") return true;
+    if (value && value.indexOf("list:") === 0) return !!findList(value.slice(5));
+    return mode === "Kanji" && /^[1-5]$/.test(String(value));
+  }
+
   function getKanjiSet(filterValue){
     if (filterValue === "all") return KANJI_DATA.map(function(e){ return e[0]; });
     var lvl = Number(filterValue);
     return KANJI_DATA.filter(function(e){ return e[1] === lvl; }).map(function(e){ return e[0]; });
   }
 
+  // The characters practised right now in a script. An empty list falls back
+  // to the whole script so the trainer never ends up with nothing to show.
   function getActiveSet(mode){
-    if (mode === "Kanji") return getKanjiSet(jlptSelect.value);
-    return CHAR_SETS[mode];
+    var v = state.sets[mode];
+    if (!isValidSet(mode, v)) v = defaultSetFor(mode);
+    var chars = charsForSet(mode, v);
+    return chars.length ? chars : charsForSet(mode, defaultSetFor(mode));
   }
 
   // ---------- Pre-recorded kana pronunciation (VOICEVOX) ----------
@@ -10451,7 +10565,11 @@
       quizPrepareTitle: "Prepare", quizTestTitle: "Test",
       quizProgress: "Question {n} of {total}", quizScoreLabel: "correct",
       quizRetry: "Try again", quizChooseAnother: "Choose another",
-      quizDone: "Done",
+      quizDone: "Done", quizStart: "Start", quizEnd: "End",
+      modeLetterPractice: "P", modeLetterPrepare: "Pr", modeLetterTest: "T",
+      scriptAria: "Script", saveAria: "Save character", listFav: "Favourites", grpJlpt: "JLPT", grpLists: "My lists", setAll: "All",
+      listNewPh: "New list name", listBackAria: "Back", listAddAria: "Create list", listDeleteAria: "Delete list",
+      listDeleteSure: "Tap again to delete", listsNone: "No lists yet - create one below.",
       masteryAria: "Mastery colours", mapPrevAria: "Previous script", mapNextAria: "Next script", legendTitle: "Mastery",
       legendUnseen: "Not yet seen", legendStruggle: "Struggling", legendLearning: "Learning",
       legendFamiliar: "Familiar", legendKnown: "Known", legendMastered: "Mastered - know it by heart",
@@ -10504,7 +10622,7 @@
       offerEyebrow: "Almost there", offerHeading: "Want a quick tour of the app?",
       offerBody: "I\u2019ll point out the main features - takes about 30 seconds.",
       offerTour: "Take the tour", offerSkip: "Skip, I\u2019m ready",
-      tour1: "Switch between Romaji, Hiragana, Katakana, and Kanji here.",
+      tour1: "Switch between Hiragana, Katakana and Kanji here, and pick which set to practise (JLPT levels, favourites or your own lists).",
       tour2: "This is the character to learn. Tap it to hear it and reveal the answer.",
       tour3: "Tap here any time to hear the correct pronunciation.",
       tour4: "Tap Go to move on to the next character.",
@@ -10554,7 +10672,11 @@
       quizPrepareTitle: "Vorbereiten", quizTestTitle: "Test",
       quizProgress: "Frage {n} von {total}", quizScoreLabel: "richtig",
       quizRetry: "Nochmal versuchen", quizChooseAnother: "Andere wählen",
-      quizDone: "Fertig",
+      quizDone: "Fertig", quizStart: "Start", quizEnd: "Beenden",
+      modeLetterPractice: "\u00DC", modeLetterPrepare: "V", modeLetterTest: "T",
+      scriptAria: "Schrift", saveAria: "Zeichen speichern", listFav: "Favoriten", grpJlpt: "JLPT", grpLists: "Meine Listen", setAll: "Alle",
+      listNewPh: "Name der neuen Liste", listBackAria: "Zur\u00FCck", listAddAria: "Liste erstellen", listDeleteAria: "Liste l\u00F6schen",
+      listDeleteSure: "Nochmal tippen zum L\u00F6schen", listsNone: "Noch keine Listen - erstelle unten eine.",
       masteryAria: "Lernfortschritt-Farben", mapPrevAria: "Vorherige Schrift", mapNextAria: "Nächste Schrift", legendTitle: "Lernfortschritt",
       legendUnseen: "Noch nicht gesehen", legendStruggle: "Schwierig", legendLearning: "Am Lernen",
       legendFamiliar: "Vertraut", legendKnown: "Bekannt", legendMastered: "Sicher beherrscht",
@@ -10607,7 +10729,7 @@
       offerEyebrow: "Fast geschafft", offerHeading: "M\u00F6chtest du eine kurze Tour durch die App?",
       offerBody: "Ich zeige dir die wichtigsten Funktionen - das dauert etwa 30 Sekunden.",
       offerTour: "Tour starten", offerSkip: "\u00DCberspringen, ich bin bereit",
-      tour1: "Wechsle hier zwischen Romaji, Hiragana, Katakana und Kanji.",
+      tour1: "Wechsle hier zwischen Hiragana, Katakana und Kanji und w\u00E4hle, welchen Satz du \u00FCbst (JLPT-Stufen, Favoriten oder eigene Listen).",
       tour2: "Das ist das Zeichen, das du lernst. Tippe darauf, um es zu h\u00F6ren und die L\u00F6sung zu zeigen.",
       tour3: "Tippe hier jederzeit, um die richtige Aussprache zu h\u00F6ren.",
       tour4: "Tippe auf Los, um zum n\u00E4chsten Zeichen zu gelangen.",
@@ -10684,7 +10806,8 @@
       strokeChartMode: state.strokeChartMode,
       revealScripts: state.revealScripts,
       sequenceOrder: sequenceSelect.value,
-      jlptLevel: jlptSelect.value
+      jlptLevel: state.sets.Kanji,
+      sets: state.sets
     };
     c.lastPlayed = Date.now();
     persistCourses();
@@ -10766,6 +10889,8 @@
     mapBtnMode: "always", // same three options, for the map icon
     strokeBtnMode: "reveal", // same three options, for the stroke animation icon
     strokeChartMode: "reveal", // same three options, for the stroke chart icon
+    appMode: "practice",     // "practice" | "prepare" | "test"
+    sets: { Hiragana: "all", Katakana: "all", Kanji: "5" }, // chosen set per script: "all" | "5".."1" | "fav" | "list:<id>"
     writeSplit: false,       // writing pad shown as drawing + watching halves
     writeDrawPos: "top",     // split view in portrait: drawing half "top" | "bottom"
     writeRotate: true,       // split view may turn sideways with the phone
@@ -10775,12 +10900,12 @@
   function $(id){ return document.getElementById(id); }
 
   // ---------- Step / page navigation ----------
-  var PAGES = ["page0","page1","page2","page3","pageAudio","pageWrite","page4"];
+  var PAGES = ["page0","page1","page2","page3","pageAudio","page4"];
 
   // Language select (page0) is a one-time "installer" screen, so it gets no
   // dot. Dots start from the Main Menu (the app's real second screen) and
   // track the rest of the flow: Main Menu, Course Setup, Display Settings.
-  var DOT_PAGES = ["page2","page3","pageAudio","pageWrite"];
+  var DOT_PAGES = ["page2","page3","pageAudio"];
   var userIcon = $("userIcon");
   var userMenu = $("userMenu");
   var stepsToggle = $("stepsToggle");
@@ -10865,8 +10990,6 @@
     stepsToggle.disabled = !onMainPage;
     if (!onMainPage){
       $("settingsOverlay").hidden = true;
-      $("modesOverlay").hidden = true;
-      $("quizOverlay").hidden = true;
       $("strokeChartOverlay").hidden = true;
       closeWritePad();
     }
@@ -10875,6 +10998,7 @@
     // Inside a course the wordmark gives way to the modes (hamburger) icon.
     $("wordmark").hidden = onMainPage;
     $("modesBtn").hidden = !onMainPage;
+    $("modeLetter").hidden = !onMainPage;
     $("userAnchor").style.display = earlyPage ? "none" : "";
     $("langBtn").classList.toggle("visible", pageId === "page1");
     if (!onMainPage) closeAllMenus();
@@ -11508,10 +11632,6 @@
     goTo("pageAudio", { fade:true });
   });
   $("pageAudioContinue").addEventListener("click", function(){
-    goTo("pageWrite", { fade:true });
-  });
-  $("pageWriteBack").addEventListener("click", function(){ goTo("pageAudio", { fade:true }); });
-  $("pageWriteContinue").addEventListener("click", function(){
     createCourse(courseNameInput.value.trim());
     saveCourse();
     goTo("page4", { fade:true });
@@ -11537,7 +11657,6 @@
   syncWriteSelects();
 
   // ---------- Page 4 ----------
-  var modeButtonsEl = $("modeButtons");
   var trainerStage = $("trainerStage");
   var charStage = $("charStage");
   var mainChar = $("mainChar");
@@ -11553,7 +11672,6 @@
   var strokeChartBody = $("strokeChartBody");
   var optionsToggle = $("optionsToggle");
   var optionsPanel = $("optionsPanel");
-  var jlptRow = $("jlptRow");
   var jlptSelect = $("jlptSelect");
   var kanjiCaption = $("kanjiCaption");
   var audioBtn = $("audioBtn");
@@ -11578,34 +11696,10 @@
 
   function isDark(){ return state.theme === "Dark Mode"; }
 
-  function buildModeButtons(){
-    modeButtonsEl.innerHTML = "";
-    MODE_ORDER.forEach(function(mode){
-      var b = document.createElement("button");
-      b.className = "mode-btn";
-      b.textContent = mode;
-      b.dataset.mode = mode;
-      b.addEventListener("click", function(){ setMode(mode); });
-      modeButtonsEl.appendChild(b);
-    });
-    styleModeButtons();
-  }
-
-  function styleModeButtons(){
-    var dark = isDark();
-    modeButtonsEl.querySelectorAll(".mode-btn").forEach(function(b){
-      if (b.dataset.mode === state.mode){
-        b.style.background = "#D9635A";
-        b.style.color = "#1B1B1B";
-      } else if (dark){
-        b.style.background = "#3C3C3C";
-        b.style.color = "#FFFFFF";
-      } else {
-        b.style.background = "#dae0e3";
-        b.style.color = "#000000";
-      }
-    });
-  }
+  // The script (hiragana / katakana / kanji) is chosen with the square at the
+  // top left of the card; these keep the old call sites working.
+  function buildModeButtons(){ updateScriptBtn(); }
+  function styleModeButtons(){ updateScriptBtn(); }
 
   function styleTrainerChrome(){
     var dark = isDark();
@@ -11664,12 +11758,13 @@
   function setMode(mode){
     state.mode = mode;
     state.currentIndex = 0;
-    styleModeButtons();
-    jlptRow.hidden = mode !== "Kanji";
+    updateScriptBtn();
+    rebuildSetOptions();
     updateStageHeight();
     updateRevealScriptsRow(mode);
     updateSequenceLabels(mode);
     showCharacterBasedOnSelection();
+    if (state.appMode !== "practice") renderQuizIntro();
     saveCourse();
   }
 
@@ -11716,6 +11811,7 @@
     resetExtraCharacters();
     state.showExtra = false;
     updateStrokeBtn();
+    updateSaveBtn();
   }
 
   function resetExtraCharacters(){
@@ -11764,7 +11860,7 @@
       var flank = FLANKS[state.mode];
       var leftText = "", rightText = "";
       if (flank){
-        var idx = getActiveSet(state.mode).indexOf(current);
+        var idx = CHAR_SETS[state.mode].indexOf(current);
         if (idx !== -1){
           if (state.revealScripts[flank.left]) leftText = CHAR_SETS[flank.left][idx];
           if (state.revealScripts[flank.right]) rightText = CHAR_SETS[flank.right][idx];
@@ -13435,7 +13531,9 @@
   });
 
   jlptSelect.addEventListener("change", function(){
+    state.sets[state.mode] = jlptSelect.value;
     state.currentIndex = 0;
+    if (state.appMode !== "practice") renderQuizIntro();
     resetExtraCharacters();
     state.showExtra = false;
     showCharacterBasedOnSelection();
@@ -13591,12 +13689,16 @@
     var current = mainChar.textContent;
 
     if (mode === "Kanji"){
-      mapTitle.textContent = "Kanji" + (jlptSelect.value === "all" ? " · " + t("allLevels") : " · N" + jlptSelect.value);
-      var levels = jlptSelect.value === "all" ? [5,4,3,2,1] : [Number(jlptSelect.value)];
+      var kSet = state.sets.Kanji;
+      var isListSet = kSet === "fav" || kSet.indexOf("list:") === 0;
+      mapTitle.textContent = "Kanji" + (isListSet ? " · " + setLabel("Kanji") : (kSet === "all" ? " · " + t("allLevels") : " · N" + kSet));
+      var levels = isListSet ? [0] : (kSet === "all" ? [5,4,3,2,1] : [Number(kSet)]);
       levels.forEach(function(lvl){
-        var chars = KANJI_DATA.filter(function(e){ return e[1] === lvl; });
+        var chars = isListSet
+          ? charsForSet("Kanji", kSet).map(function(c){ return KANJI_BY_CHAR[c]; }).filter(Boolean)
+          : KANJI_DATA.filter(function(e){ return e[1] === lvl; });
         if (!chars.length) return;
-        addMapSection("N" + lvl + " (" + chars.length + ")", chars.map(function(e){
+        addMapSection((isListSet ? setLabel("Kanji") : "N" + lvl) + " (" + chars.length + ")", chars.map(function(e){
           return { char: e[0], sub: (e[4] || "").split(",")[0], current: isActiveMode && e[0] === current };
         }));
       });
@@ -13628,8 +13730,8 @@
     // script's mode button would.
     if (mapMode !== state.mode){
       state.mode = mapMode;
-      styleModeButtons();
-      jlptRow.hidden = state.mode !== "Kanji";
+      updateScriptBtn();
+      rebuildSetOptions();
       updateStageHeight();
       updateRevealScriptsRow(state.mode);
       updateSequenceLabels(state.mode);
@@ -13705,7 +13807,7 @@
   ];
 
   var TOUR_STEPS = [
-    { selector: "#modeButtons", key: "tour1" },
+    { selector: "#scriptBtn", key: "tour1" },
     { selector: "#charStage", key: "tour2" },
     { selector: "#audioBtn", key: "tour3" },
     { selector: "#goBtn", key: "tour4" },
@@ -13956,12 +14058,14 @@
   function initPage4IfNeeded(){
     if (page4Initialized) return;
     page4Initialized = true;
-    buildModeButtons();
     styleTrainerChrome();
     setOptionsExpanded(false);
     positionAnswerRow();
     state.mode = DEFAULT_MODE;
     state.currentIndex = 0;
+    updateScriptBtn();
+    rebuildSetOptions();
+    setAppMode("practice");
     updateStageHeight();
     updateRevealScriptsRow(state.mode);
     updateSequenceLabels(state.mode);
@@ -13975,7 +14079,8 @@
   // match. Runs every "Load Course" - unlike initPage4IfNeeded()'s DOM
   // setup, this isn't a one-time thing.
   function applyLoadedCourseToPage4(data){
-    state.mode = data.mode || DEFAULT_MODE;
+    // Romaji used to be a mode of its own; saved courses fall back to Hiragana.
+    state.mode = (data.mode && MODE_ORDER.indexOf(data.mode) !== -1) ? data.mode : DEFAULT_MODE;
     state.currentIndex = data.currentIndex || 0;
     state.audioBtnMode = data.audioBtnMode || "always";
     state.mapBtnMode = data.mapBtnMode || "always";
@@ -13983,7 +14088,14 @@
     state.strokeChartMode = data.strokeChartMode || "reveal";
     state.revealScripts = data.revealScripts || state.revealScripts;
     if (data.sequenceOrder) sequenceSelect.value = data.sequenceOrder;
-    if (data.jlptLevel) jlptSelect.value = data.jlptLevel;
+    state.sets = { Hiragana: "all", Katakana: "all", Kanji: "5" };
+    if (data.sets){
+      Object.keys(state.sets).forEach(function(m){
+        if (data.sets[m] && isValidSet(m, data.sets[m])) state.sets[m] = data.sets[m];
+      });
+    } else if (data.jlptLevel && isValidSet("Kanji", data.jlptLevel)){
+      state.sets.Kanji = data.jlptLevel;
+    }
     audioBtnModeSelect.value = state.audioBtnMode;
     mapBtnModeSelect.value = state.mapBtnMode;
     strokeBtnModeSelect.value = state.strokeBtnMode;
@@ -13994,9 +14106,10 @@
     applyAudioBtnMode();
     applyMapBtnMode();
     updateStrokeBtn();
-    styleModeButtons();
+    updateScriptBtn();
     styleTrainerChrome();
-    jlptRow.hidden = state.mode !== "Kanji";
+    rebuildSetOptions();
+    setAppMode("practice");
     updateStageHeight();
     updateRevealScriptsRow(state.mode);
     updateSequenceLabels(state.mode);
@@ -14021,6 +14134,12 @@
     refreshPage2Message();
     page3Message.textContent = themeSelect.value === "LBL Mode" ? t("notAvail") : "";
     updateSequenceLabels(state.mode);
+    if (page4Initialized){
+      updateModeLetter();
+      updateScriptBtn();
+      rebuildSetOptions();
+      if (state.appMode !== "practice") renderQuizIntro();
+    }
     if (!loadOverlay.hidden) renderLoadList();
   }
 
@@ -14075,16 +14194,136 @@
   $("langCloseBtn").addEventListener("click", function(){ langOverlay.hidden = true; });
   langOverlay.addEventListener("click", function(e){ if (e.target === langOverlay) langOverlay.hidden = true; });
 
-  // ---------- Custom dropdown (see .dd-* CSS) ----------
-  // enhanceSelect(sel) hides the native <select> and shows a styled trigger +
-  // popup instead. The <select> stays the source of truth: choosing an item
-  // sets its value and fires a normal "change" event, and programmatic
-  // `sel.value = x` / option text changes (i18n) are mirrored back into the
-  // trigger label.
+  // ---------- Pop-up menus + custom dropdown (see .dd-* CSS) ----------
+  // openPopLayer() is the shared floating panel (used by the styled
+  // dropdowns, the script picker, the mode menu and the save-to-list
+  // popover). enhanceSelect(sel) hides a native <select> and puts a styled
+  // trigger in front of it; the <select> stays the source of truth: choosing
+  // an item sets its value and fires a normal "change" event, and
+  // programmatic `sel.value = x` / option text changes (i18n) are mirrored
+  // back into the trigger label.
   var DD_CHEVRON = '<svg class="dd-chev" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var DD_CHECK = '<svg class="dd-check" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ddOpen = null; // { close() } of the currently open popup
   var selValueDesc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+
+  // Opens an empty floating panel next to `anchor`; the caller fills
+  // handle.pop and then calls handle.place() (again after any later change
+  // to its content). opts: matchWidth, minWidth, alignRight, onClose.
+  function openPopLayer(anchor, opts){
+    opts = opts || {};
+    if (ddOpen) ddOpen.close();
+    var layer = document.createElement("div");
+    layer.className = "dd-layer";
+    var pop = document.createElement("div");
+    pop.className = "dd-pop";
+    if (opts.cls) pop.classList.add(opts.cls);
+    if (anchor.closest && anchor.closest(".sim-dark")) pop.classList.add("dd-dark");
+    layer.appendChild(pop);
+    document.body.appendChild(layer);
+    var shown = false;
+
+    function place(){
+      var r = anchor.getBoundingClientRect();
+      var vw = window.innerWidth, vh = window.innerHeight, gap = 6, edge = 10;
+      pop.style.top = ""; pop.style.bottom = ""; pop.style.maxHeight = ""; pop.style.width = "";
+      var want = Math.max(opts.matchWidth ? r.width : 0, opts.minWidth || 170);
+      var width = Math.min(want, vw - edge * 2);
+      var left = opts.alignRight ? r.right - width : r.left;
+      left = Math.min(Math.max(left, edge), vw - width - edge);
+      var natural = Math.min(pop.scrollHeight + 2, 340);
+      var below = vh - r.bottom - gap - edge, above = r.top - gap - edge;
+      var up = below < natural && above > below;
+      var maxH = Math.max(120, Math.min(340, up ? above : below));
+      pop.style.width = width + "px";
+      pop.style.left = left + "px";
+      pop.style.maxHeight = maxH + "px";
+      if (up){
+        pop.style.bottom = (vh - r.top + gap) + "px";
+        pop.style.setProperty("--dd-origin", "bottom center");
+      } else {
+        pop.style.top = (r.bottom + gap) + "px";
+        pop.style.setProperty("--dd-origin", "top center");
+      }
+      if (!shown){
+        shown = true;
+        if (up) pop.style.transform = "scale(.96) translateY(4px)";
+        void pop.offsetWidth;
+        pop.style.transform = "";
+        pop.classList.add("show");
+      }
+    }
+
+    function onKey(e){
+      if (e.key === "Escape"){ e.preventDefault(); close(); if (anchor.focus) anchor.focus(); return; }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+        var enabled = Array.prototype.filter.call(pop.querySelectorAll(".dd-opt"), function(b){ return !b.disabled; });
+        if (!enabled.length) return;
+        e.preventDefault();
+        var idx = enabled.indexOf(document.activeElement);
+        idx = e.key === "ArrowDown" ? Math.min(enabled.length - 1, idx + 1) : Math.max(0, idx - 1);
+        enabled[idx].focus();
+      }
+    }
+    function onDismiss(e){ if (!pop.contains(e.target)) close(); }
+    function onScroll(e){ if (!pop.contains(e.target)) close(); }
+    layer.addEventListener("pointerdown", onDismiss);
+    document.addEventListener("keydown", onKey, true);
+    window.addEventListener("resize", close);
+    window.addEventListener("scroll", onScroll, true);
+
+    function close(){
+      if (ddOpen !== handle) return;
+      ddOpen = null;
+      document.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", onScroll, true);
+      pop.classList.remove("show");
+      window.setTimeout(function(){ if (layer.parentNode) layer.parentNode.removeChild(layer); }, 160);
+      if (opts.onClose) opts.onClose();
+    }
+    var handle = { pop: pop, place: place, close: close };
+    ddOpen = handle;
+    return handle;
+  }
+
+  // items: { header } | { label, sub, badge, selected, disabled, onPick }
+  function openPopMenu(anchor, items, opts){
+    var h = openPopLayer(anchor, opts);
+    var pop = h.pop;
+    pop.setAttribute("role", "listbox");
+    var selectedBtn = null;
+    items.forEach(function(it){
+      if (it.header){
+        pop.appendChild(makeEl("div", "dd-group", it.header));
+        return;
+      }
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "dd-opt";
+      b.setAttribute("role", "option");
+      b.setAttribute("aria-selected", it.selected ? "true" : "false");
+      b.disabled = !!it.disabled;
+      if (it.badge){ b.appendChild(makeEl("span", "pm-badge", it.badge)); }
+      var text = makeEl("span", "pm-text");
+      text.appendChild(makeEl("span", "pm-label", it.label));
+      if (it.sub) text.appendChild(makeEl("span", "pm-sub", it.sub));
+      b.appendChild(text);
+      b.insertAdjacentHTML("beforeend", DD_CHECK);
+      b.addEventListener("click", function(){
+        h.close();
+        if (it.onPick) it.onPick();
+      });
+      pop.appendChild(b);
+      if (it.selected) selectedBtn = b;
+    });
+    h.place();
+    if (selectedBtn){
+      selectedBtn.focus({ preventScroll: true });
+      pop.scrollTop = Math.max(0, selectedBtn.offsetTop - pop.clientHeight / 2 + selectedBtn.offsetHeight / 2);
+    }
+    return h;
+  }
 
   function enhanceSelect(sel){
     if (!sel || sel._dd) { if (sel && sel._dd) sel._dd.refresh(); return; }
@@ -14117,87 +14356,29 @@
     new MutationObserver(refresh).observe(sel, { childList: true, subtree: true, characterData: true });
 
     function open(){
-      if (ddOpen) ddOpen.close();
-      var layer = document.createElement("div");
-      layer.className = "dd-layer";
-      var pop = document.createElement("div");
-      pop.className = "dd-pop";
-      pop.setAttribute("role", "listbox");
-      if (trigger.closest(".sim-dark")) pop.classList.add("dd-dark");
-      var opts = [];
+      var items = [], lastGroup = null;
       Array.prototype.forEach.call(sel.options, function(o, i){
-        var b = document.createElement("button");
-        b.type = "button";
-        b.className = "dd-opt";
-        b.setAttribute("role", "option");
-        b.setAttribute("aria-selected", i === sel.selectedIndex ? "true" : "false");
-        b.disabled = o.disabled;
-        b.innerHTML = '<span></span>' + DD_CHECK;
-        b.firstChild.textContent = o.textContent;
-        b.addEventListener("click", function(){
-          var changed = sel.selectedIndex !== i;
-          sel.selectedIndex = i;
-          refresh();
-          close();
-          if (changed) sel.dispatchEvent(new Event("change", { bubbles: true }));
+        var g = o.parentNode && o.parentNode.tagName === "OPTGROUP" ? o.parentNode.label : null;
+        if (g !== lastGroup){ if (g) items.push({ header: g }); lastGroup = g; }
+        items.push({
+          label: o.textContent, selected: i === sel.selectedIndex, disabled: o.disabled,
+          onPick: function(){
+            var changed = sel.selectedIndex !== i;
+            sel.selectedIndex = i;
+            refresh();
+            if (changed) sel.dispatchEvent(new Event("change", { bubbles: true }));
+          }
         });
-        opts.push(b);
-        pop.appendChild(b);
       });
-      layer.appendChild(pop);
-      document.body.appendChild(layer);
-
-      // Place under the trigger (or above it when there's more room there).
-      var r = trigger.getBoundingClientRect();
-      var vw = window.innerWidth, vh = window.innerHeight, gap = 6, edge = 10;
-      var width = Math.min(Math.max(r.width, 170), vw - edge * 2);
-      var left = Math.min(Math.max(r.left, edge), vw - width - edge);
-      var natural = Math.min(pop.scrollHeight + 2, 340);
-      var below = vh - r.bottom - gap - edge, above = r.top - gap - edge;
-      var up = below < natural && above > below;
-      var maxH = Math.max(120, Math.min(340, up ? above : below));
-      pop.style.width = width + "px";
-      pop.style.left = left + "px";
-      pop.style.maxHeight = maxH + "px";
-      if (up){ pop.style.bottom = (vh - r.top + gap) + "px"; pop.style.setProperty("--dd-origin", "bottom center"); pop.style.transform = "scale(.96) translateY(4px)"; }
-      else { pop.style.top = (r.bottom + gap) + "px"; }
       trigger.classList.add("open");
       trigger.setAttribute("aria-expanded", "true");
-      void pop.offsetWidth;
-      pop.style.transform = "";
-      pop.classList.add("show");
-      var cur = opts[sel.selectedIndex];
-      if (cur) { cur.focus({ preventScroll: true }); pop.scrollTop = Math.max(0, cur.offsetTop - pop.clientHeight / 2 + cur.offsetHeight / 2); }
-
-      function onKey(e){
-        if (e.key === "Escape"){ e.preventDefault(); close(); trigger.focus(); return; }
-        if (e.key === "ArrowDown" || e.key === "ArrowUp"){
-          e.preventDefault();
-          var enabled = opts.filter(function(b){ return !b.disabled; });
-          var idx = enabled.indexOf(document.activeElement);
-          idx = e.key === "ArrowDown" ? Math.min(enabled.length - 1, idx + 1) : Math.max(0, idx - 1);
-          if (enabled[idx]) enabled[idx].focus();
+      openPopMenu(trigger, items, {
+        matchWidth: true,
+        onClose: function(){
+          trigger.classList.remove("open");
+          trigger.setAttribute("aria-expanded", "false");
         }
-      }
-      function onDismiss(e){ if (!pop.contains(e.target)) close(); }
-      function onScroll(e){ if (!pop.contains(e.target)) close(); }
-      layer.addEventListener("pointerdown", onDismiss);
-      document.addEventListener("keydown", onKey, true);
-      window.addEventListener("resize", close);
-      window.addEventListener("scroll", onScroll, true);
-      function close(){
-        if (ddOpen !== handle) return;
-        ddOpen = null;
-        document.removeEventListener("keydown", onKey, true);
-        window.removeEventListener("resize", close);
-        window.removeEventListener("scroll", onScroll, true);
-        trigger.classList.remove("open");
-        trigger.setAttribute("aria-expanded", "false");
-        pop.classList.remove("show");
-        window.setTimeout(function(){ if (layer.parentNode) layer.parentNode.removeChild(layer); }, 160);
-      }
-      var handle = { close: close };
-      ddOpen = handle;
+      });
     }
 
     trigger.addEventListener("click", function(){
@@ -14223,73 +14404,244 @@
     applyShellTheme(themeSelect.value || "Light Mode");
   }
 
-  // ---------- Modes: Practice / Prepare / Test ----------
-  var modesOverlay = $("modesOverlay");
-  var modesTitleEl = $("modesTitle");
-  var modesBody = $("modesBody");
-  var modesBackBtn = $("modesBackBtn");
-  var modesView = "menu"; // "menu" | "prepare-pick" | "test-pick"
+  // ---------- Script picker + set dropdown (top of the card) ----------
+  var scriptBtn = $("scriptBtn");
+  var SCRIPT_ICON = { Hiragana: "あ", Katakana: "ア", Kanji: "漢" };
 
-  function openModesOverlay(){
-    modesView = "menu";
-    renderModesMenu();
-    modesOverlay.hidden = false;
+  function updateScriptBtn(){
+    $("scriptBtnChar").textContent = SCRIPT_ICON[state.mode] || "あ";
+    scriptBtn.setAttribute("aria-label", t("scriptAria") + ": " + state.mode);
   }
-  function closeModesOverlay(){ modesOverlay.hidden = true; }
-
-  function modeRow(title, sub, onClick){
-    var b = makeEl("button", "lang-opt");
-    b.type = "button";
-    var span = makeEl("span", "", title);
-    if (sub) span.appendChild(makeEl("span", "mode-opt-sub", sub));
-    b.appendChild(span);
-    b.addEventListener("click", onClick);
-    return b;
-  }
-
-  function renderModesMenu(){
-    modesView = "menu";
-    modesTitleEl.textContent = t("modesTitle");
-    modesBody.innerHTML = "";
-    modesBody.appendChild(modeRow(t("modePractice"), t("modePracticeSub"), function(){ closeModesOverlay(); }));
-    modesBody.appendChild(modeRow(t("modePrepare"), t("modePrepareSub"), function(){ renderScriptPicker("prepare"); }));
-    modesBody.appendChild(modeRow(t("modeTest"), t("modeTestSub"), function(){ renderScriptPicker("test"); }));
-  }
-
-  var QUIZ_SCRIPTS = ["Hiragana", "Katakana", "Kanji"];
-
-  function renderScriptPicker(kind){
-    modesView = kind + "-pick";
-    modesTitleEl.textContent = kind === "prepare" ? t("modePrepare") : t("modeTest");
-    modesBody.innerHTML = "";
-    QUIZ_SCRIPTS.forEach(function(script){
-      modesBody.appendChild(modeRow(script, null, function(){
-        closeModesOverlay();
-        startQuiz(kind, script);
-      }));
-    });
-    if (kind === "test"){
-      modesBody.appendChild(modeRow(t("modeAllScripts"), null, function(){
-        closeModesOverlay();
-        startQuiz(kind, "All");
-      }));
-    }
-  }
-
-  modesBackBtn.addEventListener("click", function(){
-    if (modesView === "menu") closeModesOverlay();
-    else renderModesMenu();
+  scriptBtn.addEventListener("click", function(){
+    openPopMenu(scriptBtn, MODE_ORDER.map(function(m){
+      return { badge: SCRIPT_ICON[m], label: m, selected: m === state.mode, onPick: function(){ if (m !== state.mode) setMode(m); } };
+    }), { minWidth: 190 });
   });
-  modesOverlay.addEventListener("click", function(e){ if (e.target === modesOverlay) closeModesOverlay(); });
-  $("modesBtn").addEventListener("click", openModesOverlay);
 
-  // ---------- Shared quiz engine (used by both Prepare and Test) ----------
-  var quizOverlay = $("quizOverlay");
-  var quizTitleEl = $("quizTitle");
+  // Fills the set dropdown for the current script: JLPT levels (kanji only),
+  // then Favourites and the learner's own lists, with how many characters of
+  // this script each one holds.
+  function rebuildSetOptions(){
+    var mode = state.mode;
+    var cur = state.sets[mode];
+    if (!isValidSet(mode, cur)) { cur = defaultSetFor(mode); state.sets[mode] = cur; }
+    jlptSelect.innerHTML = "";
+    function addOpt(parent, value, label, disabled){
+      var o = document.createElement("option");
+      o.value = value; o.textContent = label; o.disabled = !!disabled;
+      parent.appendChild(o);
+    }
+    if (mode === "Kanji"){
+      var g1 = document.createElement("optgroup");
+      g1.label = t("grpJlpt");
+      [5, 4, 3, 2, 1].forEach(function(l){ addOpt(g1, String(l), "N" + l); });
+      addOpt(g1, "all", t("jlptAll"));
+      jlptSelect.appendChild(g1);
+    } else {
+      addOpt(jlptSelect, "all", t("setAll"));
+    }
+    var g2 = document.createElement("optgroup");
+    g2.label = t("grpLists");
+    var favN = setCharsOfScript(userLists.fav, mode).length;
+    addOpt(g2, "fav", t("listFav") + " (" + favN + ")", favN === 0 && cur !== "fav");
+    userLists.lists.forEach(function(l){
+      var n = setCharsOfScript(l.chars, mode).length;
+      addOpt(g2, "list:" + l.id, l.name + " (" + n + ")", n === 0 && cur !== "list:" + l.id);
+    });
+    jlptSelect.appendChild(g2);
+    jlptSelect.value = cur;
+    enhanceSelect(jlptSelect);
+  }
+
+  // ---------- Save character: plus -> heart (Favourites) / lists ----------
+  var saveBtn = $("saveBtn");
+  var ICON_PLUS = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  var ICON_HEART_ON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2.2 10 2.2 6.1A3.1 3.1 0 0 1 8 4.7a3.1 3.1 0 0 1 5.8 1.4C13.8 10 8 13.6 8 13.6Z" fill="currentColor"/></svg>';
+  var ICON_HEART = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13.6S2.2 10 2.2 6.1A3.1 3.1 0 0 1 8 4.7a3.1 3.1 0 0 1 5.8 1.4C13.8 10 8 13.6 8 13.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+  var ICON_LIST = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.5 4h8M5.5 8h8M5.5 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="2.4" cy="4" r=".9" fill="currentColor"/><circle cx="2.4" cy="8" r=".9" fill="currentColor"/><circle cx="2.4" cy="12" r=".9" fill="currentColor"/></svg>';
+  var ICON_LIST_ON = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h6.5M2.5 8h6.5M2.5 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9.8 11.3l1.8 1.8 3.4-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_TRASH = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_BACK = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function inAnyList(ch){
+    return userLists.lists.some(function(l){ return l.chars.indexOf(ch) !== -1; });
+  }
+  function updateSaveBtn(){
+    var ch = mainChar.textContent;
+    var fav = userLists.fav.indexOf(ch) !== -1;
+    var listed = inAnyList(ch);
+    saveBtn.innerHTML = fav ? ICON_HEART_ON : (listed ? ICON_LIST_ON : ICON_PLUS);
+    saveBtn.classList.toggle("saved", fav || listed);
+    saveBtn.hidden = !charScript(ch);
+  }
+  function toggleIn(arr, ch){
+    var i = arr.indexOf(ch);
+    if (i === -1) arr.push(ch); else arr.splice(i, 1);
+  }
+  // After a list changed: refresh counts and, if the active set vanished or
+  // emptied, fall back so the trainer keeps working.
+  function listsChanged(){
+    saveLists();
+    rebuildSetOptions();
+    updateSaveBtn();
+  }
+
+  function openSavePopover(){
+    var ch = mainChar.textContent;
+    if (!charScript(ch)) return;
+    var h = openPopLayer(saveBtn, { minWidth: 150, cls: "save-pop" });
+    var pop = h.pop;
+
+    function renderTop(){
+      pop.innerHTML = "";
+      var row = makeEl("div", "save-row");
+      var heart = makeEl("button", "save-icon-btn" + (userLists.fav.indexOf(ch) !== -1 ? " on" : ""));
+      heart.type = "button";
+      heart.innerHTML = userLists.fav.indexOf(ch) !== -1 ? ICON_HEART_ON : ICON_HEART;
+      heart.setAttribute("aria-label", t("listFav"));
+      heart.addEventListener("click", function(){
+        toggleIn(userLists.fav, ch);
+        listsChanged();
+        h.close();
+      });
+      var list = makeEl("button", "save-icon-btn" + (inAnyList(ch) ? " on" : ""));
+      list.type = "button";
+      list.innerHTML = inAnyList(ch) ? ICON_LIST_ON : ICON_LIST;
+      list.setAttribute("aria-label", t("grpLists"));
+      list.addEventListener("click", renderLists);
+      row.appendChild(heart);
+      row.appendChild(list);
+      pop.appendChild(row);
+      h.place();
+    }
+
+    function renderLists(){
+      pop.innerHTML = "";
+      var head = makeEl("div", "save-head");
+      var back = makeEl("button", "save-mini-btn");
+      back.type = "button";
+      back.innerHTML = ICON_BACK;
+      back.setAttribute("aria-label", t("listBackAria"));
+      back.addEventListener("click", renderTop);
+      head.appendChild(back);
+      head.appendChild(makeEl("span", "save-title", t("grpLists")));
+      pop.appendChild(head);
+
+      if (!userLists.lists.length){
+        pop.appendChild(makeEl("div", "save-empty", t("listsNone")));
+      }
+      userLists.lists.forEach(function(l){
+        var row = makeEl("div", "save-list-row");
+        var pick = makeEl("button", "save-list-pick" + (l.chars.indexOf(ch) !== -1 ? " on" : ""));
+        pick.type = "button";
+        var box = makeEl("span", "save-check");
+        if (l.chars.indexOf(ch) !== -1) box.innerHTML = DD_CHECK;
+        pick.appendChild(box);
+        pick.appendChild(makeEl("span", "save-list-name", l.name));
+        pick.addEventListener("click", function(){
+          toggleIn(l.chars, ch);
+          listsChanged();
+          renderLists();
+        });
+        var del = makeEl("button", "save-mini-btn");
+        del.type = "button";
+        del.innerHTML = ICON_TRASH;
+        del.setAttribute("aria-label", t("listDeleteAria"));
+        del.addEventListener("click", function(){
+          if (!del.classList.contains("armed")){
+            del.classList.add("armed");
+            del.title = t("listDeleteSure");
+            return;
+          }
+          userLists.lists = userLists.lists.filter(function(x){ return x.id !== l.id; });
+          Object.keys(state.sets).forEach(function(m){
+            if (state.sets[m] === "list:" + l.id) state.sets[m] = defaultSetFor(m);
+          });
+          listsChanged();
+          showCharacterBasedOnSelection();
+          saveCourse();
+          renderLists();
+        });
+        row.appendChild(pick);
+        row.appendChild(del);
+        pop.appendChild(row);
+      });
+
+      var create = makeEl("div", "save-create");
+      var input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = 30;
+      input.placeholder = t("listNewPh");
+      var add = makeEl("button", "save-mini-btn save-add");
+      add.type = "button";
+      add.innerHTML = ICON_PLUS;
+      add.setAttribute("aria-label", t("listAddAria"));
+      function doCreate(){
+        var name = input.value.trim();
+        if (!name) { input.focus(); return; }
+        var id = "l" + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
+        userLists.lists.push({ id: id, name: name, chars: [ch] }); // the character being saved goes straight in
+        listsChanged();
+        renderLists();
+      }
+      add.addEventListener("click", doCreate);
+      input.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); doCreate(); } });
+      create.appendChild(input);
+      create.appendChild(add);
+      pop.appendChild(create);
+      h.place();
+    }
+
+    renderTop();
+  }
+  saveBtn.addEventListener("click", openSavePopover);
+
+  // ---------- Modes: Practice / Prepare / Test ----------
+  // The top of the page (menu icon, mode letter, account, dots) never changes;
+  // below it, the same card shows the practice trainer or a quiz.
+  var modesBtn = $("modesBtn");
+  var modeLetterEl = $("modeLetter");
+  var practicePane = $("practicePane");
+  var quizPane = $("quizPane");
   var quizBody = $("quizBody");
-  var quizBackBtn = $("quizBackBtn");
+  var QUIZ_SCRIPTS = ["Hiragana", "Katakana", "Kanji"];
+  var APP_MODES = [
+    { id: "practice", title: "modePractice", sub: "modePracticeSub", letter: "modeLetterPractice" },
+    { id: "prepare", title: "modePrepare", sub: "modePrepareSub", letter: "modeLetterPrepare" },
+    { id: "test", title: "modeTest", sub: "modeTestSub", letter: "modeLetterTest" }
+  ];
   var QUIZ_LENGTH = 10;
   var quizState = null;
+  var quizToken = 0;
+  var quizAllScripts = false;
+
+  function appModeMeta(id){
+    for (var i = 0; i < APP_MODES.length; i++) if (APP_MODES[i].id === id) return APP_MODES[i];
+    return APP_MODES[0];
+  }
+  function updateModeLetter(){
+    modeLetterEl.textContent = t(appModeMeta(state.appMode).letter);
+  }
+
+  function setAppMode(id){
+    state.appMode = id;
+    quizToken++;
+    quizState = null;
+    closeMap();
+    practicePane.hidden = id !== "practice";
+    quizPane.hidden = id === "practice";
+    updateModeLetter();
+    if (id !== "practice") renderQuizIntro();
+  }
+
+  modesBtn.addEventListener("click", function(){
+    openPopMenu(modesBtn, APP_MODES.map(function(m){
+      return {
+        badge: t(m.letter), label: t(m.title), sub: t(m.sub), selected: m.id === state.appMode,
+        onPick: function(){ if (m.id !== state.appMode) setAppMode(m.id); }
+      };
+    }), { minWidth: 250 });
+  });
 
   function shuffle(arr){
     var a = arr.slice();
@@ -14300,53 +14652,101 @@
     return a;
   }
 
+  function setLabel(mode){
+    var v = state.sets[mode];
+    if (v === "fav") return t("listFav");
+    if (v && v.indexOf("list:") === 0){ var l = findList(v.slice(5)); return l ? l.name : t("setAll"); }
+    if (mode === "Kanji") return v === "all" ? t("jlptAll") : "N" + v;
+    return t("setAll");
+  }
+
+  function renderQuizIntro(){
+    var kind = state.appMode;
+    quizToken++;
+    quizState = null;
+    quizBody.innerHTML = "";
+    var box = makeEl("div", "quiz-intro");
+    box.appendChild(makeEl("div", "quiz-intro-title", t(appModeMeta(kind).title)));
+    box.appendChild(makeEl("p", "copy", t(appModeMeta(kind).sub)));
+    var what = quizAllScripts && kind === "test" ? t("modeAllScripts") : (state.mode + " · " + setLabel(state.mode));
+    box.appendChild(makeEl("div", "quiz-intro-set", what));
+    if (kind === "test"){
+      var tog = makeEl("button", "quiz-toggle" + (quizAllScripts ? " on" : ""), t("modeAllScripts"));
+      tog.type = "button";
+      tog.addEventListener("click", function(){ quizAllScripts = !quizAllScripts; renderQuizIntro(); });
+      box.appendChild(tog);
+    }
+    var start = makeEl("button", "btn btn-primary", t("quizStart"));
+    start.type = "button";
+    start.addEventListener("click", function(){
+      startQuiz(kind, quizAllScripts && kind === "test" ? "All" : state.mode);
+    });
+    box.appendChild(start);
+    quizBody.appendChild(box);
+  }
+
+  // ---------- Shared quiz engine (used by both Prepare and Test) ----------
   // One question: { script, char, answer, choices[] } - "answer" is what the
   // quiz checks against and also what markSrs()/the map's mastery view key
   // off of, so quiz results feed the same per-character tracking practice
   // does, not a separate parallel score.
-  function buildQuestionPool(script){
+  function answerFor(script, ch){
     if (script === "Kanji"){
-      var kanjiSet = getActiveSet("Kanji");
-      return kanjiSet.map(function(ch){
-        var rec = KANJI_BY_CHAR[ch];
-        return { script: "Kanji", char: ch, answer: (rec && rec[4] ? rec[4].split(",")[0] : ch) };
-      });
+      var rec = KANJI_BY_CHAR[ch];
+      return rec && rec[4] ? rec[4].split(",")[0] : ch;
     }
-    var mainArr = CHAR_SETS[script];
-    var romaji = CHAR_SETS.Romaji;
-    return mainArr.map(function(ch, i){ return { script: script, char: ch, answer: romaji[i] }; });
+    return CHAR_SETS.Romaji[CHAR_SETS[script].indexOf(ch)];
+  }
+  function questionPool(script){
+    return getActiveSet(script).map(function(ch){ return { script: script, char: ch, answer: answerFor(script, ch) }; });
+  }
+  // Wrong options come from the whole script (not only the chosen set), so a
+  // small list still gets enough distractors.
+  function distractorAnswers(script){
+    var all = script === "Kanji" ? KANJI_DATA.map(function(e){ return e[0]; }) : CHAR_SETS[script];
+    return all.map(function(ch){ return answerFor(script, ch); });
   }
 
-  function buildQuiz(kind, script){
+  function buildQuiz(script){
     var scripts = script === "All" ? QUIZ_SCRIPTS : [script];
-    var poolByScript = {};
-    scripts.forEach(function(s){ poolByScript[s] = buildQuestionPool(s); });
-    var combined = scripts.reduce(function(a, s){ return a.concat(poolByScript[s]); }, []);
+    var pools = {}, wrong = {};
+    scripts.forEach(function(s){ pools[s] = questionPool(s); wrong[s] = distractorAnswers(s); });
+    var combined = scripts.reduce(function(a, s){ return a.concat(pools[s]); }, []);
     var picked = shuffle(combined).slice(0, Math.min(QUIZ_LENGTH, combined.length));
     return picked.map(function(q){
-      // Wrong choices always come from the question's own script, even in
-      // an "All scripts" quiz - a kana reading shouldn't be mixed in as a
-      // wrong option for a kanji-meaning question, or vice versa.
-      var sameScriptPool = poolByScript[q.script].filter(function(o){ return o.answer !== q.answer; });
-      var distractors = shuffle(sameScriptPool).slice(0, 3).map(function(o){ return o.answer; });
-      return { script: q.script, char: q.char, answer: q.answer, choices: shuffle([q.answer].concat(distractors)) };
+      var seen = {}; seen[q.answer] = true;
+      var options = [];
+      shuffle(wrong[q.script]).forEach(function(a){
+        if (options.length < 3 && !seen[a]){ seen[a] = true; options.push(a); }
+      });
+      return { script: q.script, char: q.char, answer: q.answer, choices: shuffle([q.answer].concat(options)) };
     });
   }
 
   function startQuiz(kind, script){
-    quizState = { kind: kind, script: script, questions: buildQuiz(kind, script), index: 0, correct: 0 };
-    quizTitleEl.textContent = (kind === "prepare" ? t("quizPrepareTitle") : t("quizTestTitle")) + " · " + (script === "All" ? t("modeAllScripts") : script);
-    quizOverlay.hidden = false;
+    var token = ++quizToken;
+    quizState = { kind: kind, script: script, questions: buildQuiz(script), index: 0, correct: 0, token: token };
     renderQuizQuestion();
+  }
+
+  function quizHeader(qs){
+    var head = makeEl("div", "quiz-head");
+    head.appendChild(makeEl("span", "quiz-progress",
+      t("quizProgress").replace("{n}", qs.index + 1).replace("{total}", qs.questions.length)));
+    var end = makeEl("button", "quiz-end", t("quizEnd"));
+    end.type = "button";
+    end.addEventListener("click", renderQuizIntro);
+    head.appendChild(end);
+    return head;
   }
 
   function renderQuizQuestion(){
     var qs = quizState;
+    if (!qs) return;
     if (qs.index >= qs.questions.length){ renderQuizResult(); return; }
     var q = qs.questions[qs.index];
     quizBody.innerHTML = "";
-    quizBody.appendChild(makeEl("div", "quiz-progress",
-      t("quizProgress").replace("{n}", qs.index + 1).replace("{total}", qs.questions.length)));
+    quizBody.appendChild(quizHeader(qs));
     quizBody.appendChild(makeEl("div", "quiz-char", q.char));
     var choicesEl = makeEl("div", "quiz-choices");
     q.choices.forEach(function(choice){
@@ -14360,6 +14760,7 @@
 
   function answerQuiz(choice){
     var qs = quizState;
+    if (!qs) return;
     var q = qs.questions[qs.index];
     var isCorrect = choice === q.answer;
     if (isCorrect) qs.correct++;
@@ -14369,7 +14770,9 @@
       if (btn.textContent === q.answer) btn.classList.add("correct");
       else if (btn.textContent === choice) btn.classList.add("wrong");
     });
+    var token = qs.token;
     window.setTimeout(function(){
+      if (!quizState || quizState.token !== token) return; // quiz was left meanwhile
       qs.index++;
       renderQuizQuestion();
     }, 650);
@@ -14385,25 +14788,14 @@
     var retry = makeEl("button", "btn btn-primary", t("quizRetry"));
     retry.type = "button";
     retry.addEventListener("click", function(){ startQuiz(qs.kind, qs.script); });
-    var another = makeEl("button", "btn", t("quizChooseAnother"));
-    another.type = "button";
-    another.addEventListener("click", function(){
-      quizOverlay.hidden = true;
-      renderScriptPicker(qs.kind);
-      modesOverlay.hidden = false;
-    });
     var done = makeEl("button", "btn", t("quizDone"));
     done.type = "button";
-    done.addEventListener("click", function(){ quizOverlay.hidden = true; });
+    done.addEventListener("click", renderQuizIntro);
     actions.appendChild(retry);
-    actions.appendChild(another);
     actions.appendChild(done);
     box.appendChild(actions);
     quizBody.appendChild(box);
   }
-
-  quizBackBtn.addEventListener("click", function(){ quizOverlay.hidden = true; });
-  quizOverlay.addEventListener("click", function(e){ if (e.target === quizOverlay) quizOverlay.hidden = true; });
 
   var savedPrefs = null;
   try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY)); } catch (e) {}
