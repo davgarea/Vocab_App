@@ -466,7 +466,7 @@
   .dd-opt:has(.pm-badge){ justify-content:flex-start; }
   .dd-opt:has(.pm-badge) .dd-check{ margin-left:auto; }
 
-  /* Save-to popover: heart (Favourites) / list icons, then the lists */
+  /* Save-to popover: bookmark / list icons, then the lists */
   /* Same size and look as the trainer's map / sound buttons, with equal
      padding on all four sides of the popup. */
   .dd-pop.save-pop{ padding:6px; border-radius:12px; }
@@ -500,6 +500,8 @@
   }
   .save-list-pick.on .save-check{ background:var(--accent); border-color:var(--accent); }
   .save-check svg{ width:14px; height:14px; display:block; }
+  .save-check .dd-check{ opacity:1; color:var(--accent-ink); }
+  .dd-pop > .save-list-pick{ width:100%; }
   .save-list-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .save-create{ display:flex; gap:6px; align-items:center; padding:8px 2px 0; border-top:1px solid var(--border); margin-top:6px; }
   .save-create input{ flex:1; min-width:0; padding:8px 10px; font-size:14px; }
@@ -1481,9 +1483,9 @@
       "ミャ","ミュ","ミョ","リャ","リュ","リョ","ギャ","ギュ","ギョ","ジャ","ジュ","ジョ","ビャ","ビュ","ビョ","ピャ","ピュ","ピョ"
     ]
   };
-  // "All" mixes every script; each character still behaves as (and keeps
-  // its progress in) its own script.
-  var MODE_ORDER = ["Hiragana","Katakana","Kanji","All"];
+  // "Lists" mixes the learner's Bookmarks and own lists across every script;
+  // each character still behaves as (and keeps its progress in) its own one.
+  var MODE_ORDER = ["Hiragana","Katakana","Kanji","Lists"];
   var DEFAULT_MODE = "Hiragana";
 
   // Section boundaries shared by the practice arrays above and the "map"
@@ -5966,15 +5968,31 @@
     return null;
   }
   function setCharsOfScript(chars, mode){
-    if (mode === "All") return chars.filter(function(c){ return !!charScript(c); });
+    if (mode === "Lists") return chars.filter(function(c){ return !!charScript(c); });
     return chars.filter(function(c){ return charScript(c) === mode; });
   }
-  // The script a character counts as: its own one in the "All" section.
+  // The script a character counts as: its own one in the "Lists" section.
   function scriptFor(mode, ch){
-    return mode === "All" ? (charScript(ch) || "Hiragana") : mode;
+    return mode === "Lists" ? (charScript(ch) || "Hiragana") : mode;
   }
   function activeScript(){ return scriptFor(state.mode, mainChar.textContent); }
-  function modeName(mode){ return mode === "All" ? t("modeAllScripts") : mode; }
+  function modeName(mode){ return mode === "Lists" ? t("modeLists") : mode; }
+  // Which sources the "Lists" section studies from: "fav" and/or "list:<id>".
+  function listMixSources(){
+    return (state.listMix || []).filter(function(v){ return v === "fav" || !!findList(v.slice(5)); });
+  }
+  function listMixChars(){
+    var seen = {}, out = [];
+    listMixSources().forEach(function(v){
+      var chars = v === "fav" ? userLists.fav : findList(v.slice(5)).chars;
+      chars.forEach(function(c){ if (!seen[c] && charScript(c)){ seen[c] = true; out.push(c); } });
+    });
+    return out;
+  }
+  function listMixLabel(){
+    var names = listMixSources().map(function(v){ return v === "fav" ? t("listFav") : findList(v.slice(5)).name; });
+    return names.length ? names.join(" + ") : t("mixNone");
+  }
   // The characters a set value stands for, within one script.
   function charsForSet(mode, value){
     if (value === "fav") return setCharsOfScript(userLists.fav, mode);
@@ -5983,11 +6001,12 @@
       return l ? setCharsOfScript(l.chars, mode) : [];
     }
     if (mode === "Kanji") return getKanjiSet(value === "all" ? "all" : (value || "5"));
-    if (mode === "All") return CHAR_SETS.Hiragana.concat(CHAR_SETS.Katakana, getKanjiSet("all"));
+    if (mode === "Lists") return listMixChars();
     return CHAR_SETS[mode];
   }
-  function defaultSetFor(mode){ return mode === "Kanji" ? "5" : "all"; }
+  function defaultSetFor(mode){ return mode === "Kanji" ? "5" : (mode === "Lists" ? "mix" : "all"); }
   function isValidSet(mode, value){
+    if (mode === "Lists") return value === "mix";
     if (value === "all") return true;
     if (value === "fav") return true;
     if (value && value.indexOf("list:") === 0) return !!findList(value.slice(5));
@@ -6006,6 +6025,7 @@
     var v = state.sets[mode];
     if (!isValidSet(mode, v)) v = defaultSetFor(mode);
     var chars = charsForSet(mode, v);
+    if (mode === "Lists") return chars; // may be empty: the trainer says so
     return chars.length ? chars : charsForSet(mode, defaultSetFor(mode));
   }
 
@@ -10601,9 +10621,9 @@
       quizRetry: "Try again", quizChooseAnother: "Choose another",
       quizDone: "Done", quizStart: "Start", quizEnd: "End",
       modeLetterPractice: "S", modeLetterPrepare: "P", modeLetterTest: "T",
-      scriptAria: "Script", saveAria: "Save character", listFav: "Favourites", grpJlpt: "JLPT", grpLists: "My lists", setAll: "All",
+      scriptAria: "Script", saveAria: "Save character", listFav: "Bookmarks", grpJlpt: "JLPT", grpLists: "My lists", setAll: "All",
       listNewPh: "New list name", listBackAria: "Back", listAddAria: "Create list", listDeleteAria: "Delete list",
-      listDeleteSure: "Tap again to delete", listsNone: "No lists yet - create one below.",
+      listDeleteSure: "Tap again to delete", listsNone: "No lists yet - create one below.", modeLists: "My Lists", mixTitle: "Study from", mixNone: "Nothing picked", mixEmpty: "Nothing to study yet. Tap the box above to pick lists, or save characters with +.",
       masteryAria: "Mastery colours", mapPrevAria: "Previous script", mapNextAria: "Next script", legendTitle: "Mastery", legendCurrent: "Showing now in the trainer",
       legendUnseen: "Not yet seen", legendStruggle: "Struggling", legendLearning: "Learning",
       legendFamiliar: "Familiar", legendKnown: "Known", legendMastered: "Mastered - know it by heart",
@@ -10656,7 +10676,7 @@
       offerEyebrow: "Almost there", offerHeading: "Want a quick tour of the app?",
       offerBody: "I\u2019ll point out the main features - takes about 30 seconds.",
       offerTour: "Take the tour", offerSkip: "Skip, I\u2019m ready",
-      tour1: "Switch between Hiragana, Katakana and Kanji here, and pick which set to practise (JLPT levels, favourites or your own lists).",
+      tour1: "Switch between Hiragana, Katakana, Kanji and My Lists here, and pick which set to practise (JLPT levels, bookmarks or your own lists).",
       tour2: "This is the character to learn. Tap it to hear it and reveal the answer.",
       tour3: "Tap here any time to hear the correct pronunciation.",
       tour4: "Tap Go to move on to the next character.",
@@ -10708,9 +10728,9 @@
       quizRetry: "Nochmal versuchen", quizChooseAnother: "Andere wählen",
       quizDone: "Fertig", quizStart: "Start", quizEnd: "Beenden",
       modeLetterPractice: "L", modeLetterPrepare: "V", modeLetterTest: "T",
-      scriptAria: "Schrift", saveAria: "Zeichen speichern", listFav: "Favoriten", grpJlpt: "JLPT", grpLists: "Meine Listen", setAll: "Alle",
+      scriptAria: "Schrift", saveAria: "Zeichen speichern", listFav: "Lesezeichen", grpJlpt: "JLPT", grpLists: "Meine Listen", setAll: "Alle",
       listNewPh: "Name der neuen Liste", listBackAria: "Zur\u00FCck", listAddAria: "Liste erstellen", listDeleteAria: "Liste l\u00F6schen",
-      listDeleteSure: "Nochmal tippen zum L\u00F6schen", listsNone: "Noch keine Listen - erstelle unten eine.",
+      listDeleteSure: "Nochmal tippen zum L\u00F6schen", listsNone: "Noch keine Listen - erstelle unten eine.", modeLists: "Meine Listen", mixTitle: "Lernen aus", mixNone: "Nichts ausgew\u00E4hlt", mixEmpty: "Noch nichts zu lernen. Tippe oben auf das Feld, um Listen zu w\u00E4hlen, oder speichere Zeichen mit +.",
       masteryAria: "Lernfortschritt-Farben", mapPrevAria: "Vorherige Schrift", mapNextAria: "Nächste Schrift", legendTitle: "Lernfortschritt", legendCurrent: "Gerade im Trainer angezeigt",
       legendUnseen: "Noch nicht gesehen", legendStruggle: "Schwierig", legendLearning: "Am Lernen",
       legendFamiliar: "Vertraut", legendKnown: "Bekannt", legendMastered: "Sicher beherrscht",
@@ -10763,7 +10783,7 @@
       offerEyebrow: "Fast geschafft", offerHeading: "M\u00F6chtest du eine kurze Tour durch die App?",
       offerBody: "Ich zeige dir die wichtigsten Funktionen - das dauert etwa 30 Sekunden.",
       offerTour: "Tour starten", offerSkip: "\u00DCberspringen, ich bin bereit",
-      tour1: "Wechsle hier zwischen Hiragana, Katakana und Kanji und w\u00E4hle, welchen Satz du \u00FCbst (JLPT-Stufen, Favoriten oder eigene Listen).",
+      tour1: "Wechsle hier zwischen Hiragana, Katakana, Kanji und Meine Listen und w\u00E4hle, welchen Satz du \u00FCbst (JLPT-Stufen, Lesezeichen oder eigene Listen).",
       tour2: "Das ist das Zeichen, das du lernst. Tippe darauf, um es zu h\u00F6ren und die L\u00F6sung zu zeigen.",
       tour3: "Tippe hier jederzeit, um die richtige Aussprache zu h\u00F6ren.",
       tour4: "Tippe auf Los, um zum n\u00E4chsten Zeichen zu gelangen.",
@@ -10841,7 +10861,8 @@
       revealScripts: state.revealScripts,
       sequenceOrder: sequenceSelect.value,
       jlptLevel: state.sets.Kanji,
-      sets: state.sets
+      sets: state.sets,
+      listMix: state.listMix
     };
     c.lastPlayed = Date.now();
     persistCourses();
@@ -10924,7 +10945,8 @@
     strokeBtnMode: "reveal", // same three options, for the stroke animation icon
     strokeChartMode: "reveal", // same three options, for the stroke chart icon
     appMode: "practice",     // "practice" | "prepare" | "test"
-    sets: { Hiragana: "all", Katakana: "all", Kanji: "5", All: "all" }, // chosen set per script: "all" | "5".."1" | "fav" | "list:<id>"
+    listMix: ["fav"],         // what the "Lists" section studies from
+    sets: { Hiragana: "all", Katakana: "all", Kanji: "5", Lists: "mix" }, // chosen set per script: "all" | "5".."1" | "fav" | "list:<id>"
     writeSplit: false,       // writing pad shown as drawing + watching halves
     writeDrawPos: "top",     // split view in portrait: drawing half "top" | "bottom"
     writeRotate: true,       // split view may turn sideways with the phone
@@ -11834,6 +11856,13 @@
   }
 
   function showCharacterBasedOnSelection(){
+    if (!getActiveSet(state.mode).length){
+      // "My Lists" with nothing picked (or only empty lists): say so.
+      setCharacter("");
+      kanjiCaption.textContent = t("mixEmpty");
+      kanjiCaption.hidden = false;
+      return;
+    }
     var character = getCharacterToShow(sequenceSelect.value);
     setCharacter(character);
   }
@@ -13749,11 +13778,10 @@
           return { char: e[0], sub: (e[4] || "").split(",")[0], current: isActiveMode && e[0] === current };
         }));
       });
-    } else if (mode === "All"){
-      var aSet = state.sets.All;
-      var aList = aSet === "fav" || (aSet && aSet.indexOf("list:") === 0);
-      mapTitle.textContent = modeName("All") + (aList ? " · " + setLabel("All") : "");
-      var pool = aList ? charsForSet("All", aSet) : null;
+    } else if (mode === "Lists"){
+      mapTitle.textContent = modeName("Lists");
+      var pool = listMixChars();
+      if (!pool.length) mapGrid.appendChild(makeEl("div", "save-empty", t("mixEmpty")));
       ["Hiragana", "Katakana"].forEach(function(sc){
         var items = [];
         CHAR_SETS[sc].forEach(function(ch, i){
@@ -14155,7 +14183,8 @@
     state.strokeChartMode = data.strokeChartMode || "reveal";
     state.revealScripts = data.revealScripts || state.revealScripts;
     if (data.sequenceOrder) sequenceSelect.value = data.sequenceOrder;
-    state.sets = { Hiragana: "all", Katakana: "all", Kanji: "5", All: "all" };
+    state.sets = { Hiragana: "all", Katakana: "all", Kanji: "5", Lists: "mix" };
+    state.listMix = Array.isArray(data.listMix) ? data.listMix.slice() : ["fav"];
     if (data.sets){
       Object.keys(state.sets).forEach(function(m){
         if (data.sets[m] && isValidSet(m, data.sets[m])) state.sets[m] = data.sets[m];
@@ -14488,7 +14517,7 @@
 
   // ---------- Script picker + set dropdown (top of the card) ----------
   var scriptBtn = $("scriptBtn");
-  var SCRIPT_ICON = { Hiragana: "あ", Katakana: "ア", Kanji: "漢", All: "全" };
+  var SCRIPT_ICON = { Hiragana: "あ", Katakana: "ア", Kanji: "漢", Lists: "集" };
 
   function updateScriptBtn(){
     $("scriptBtnChar").textContent = SCRIPT_ICON[state.mode] || "あ";
@@ -14513,6 +14542,12 @@
       o.value = value; o.textContent = label; o.disabled = !!disabled;
       parent.appendChild(o);
     }
+    if (mode === "Lists"){
+      addOpt(jlptSelect, "mix", listMixLabel());
+      jlptSelect.value = "mix";
+      enhanceSelect(jlptSelect);
+      return;
+    }
     if (mode === "Kanji"){
       var g1 = document.createElement("optgroup");
       g1.label = t("grpJlpt");
@@ -14535,11 +14570,66 @@
     enhanceSelect(jlptSelect);
   }
 
-  // ---------- Save character: plus -> heart (Favourites) / lists ----------
+  // ---------- "My Lists": pick which Bookmarks / lists to study ----------
+  // Replaces the single-choice set dropdown in that section with ticks, so
+  // e.g. "kanji_n4" and Bookmarks can be studied together today.
+  function openListMixPicker(anchor){
+    var h = openPopLayer(anchor, { matchWidth: true, cls: "save-pop", keepOnResize: true,
+      onClose: function(){ anchor.classList.remove("open"); anchor.setAttribute("aria-expanded", "false"); } });
+    anchor.classList.add("open");
+    anchor.setAttribute("aria-expanded", "true");
+    var pop = h.pop;
+    pop.classList.add("save-pop-lists");
+    function render(){
+      pop.innerHTML = "";
+      var head = makeEl("div", "save-head");
+      head.appendChild(makeEl("span", "save-title", t("mixTitle")));
+      pop.appendChild(head);
+      var sources = [{ v: "fav", name: t("listFav"), chars: userLists.fav }].concat(
+        userLists.lists.map(function(l){ return { v: "list:" + l.id, name: l.name, chars: l.chars }; }));
+      sources.forEach(function(src){
+        var on = (state.listMix || []).indexOf(src.v) !== -1;
+        var pick = makeEl("button", "save-list-pick" + (on ? " on" : ""));
+        pick.type = "button";
+        var box = makeEl("span", "save-check");
+        if (on) box.innerHTML = DD_CHECK;
+        pick.appendChild(box);
+        pick.appendChild(makeEl("span", "save-list-name", src.name + " (" + setCharsOfScript(src.chars, "Lists").length + ")"));
+        pick.addEventListener("click", function(){
+          state.listMix = (state.listMix || []).filter(function(v){ return v !== src.v; });
+          if (!on) state.listMix.push(src.v);
+          rebuildSetOptions();
+          state.currentIndex = 0;
+          state.showExtra = false;
+          showCharacterBasedOnSelection();
+          if (state.appMode !== "practice") renderQuizIntro();
+          saveCourse();
+          render();
+        });
+        pop.appendChild(pick);
+      });
+      if (!userLists.lists.length) pop.appendChild(makeEl("div", "save-empty", t("listsNone").split(" - ")[0] + "."));
+      h.place();
+    }
+    render();
+  }
+  (function(){
+    var trig = jlptSelect._dd && jlptSelect._dd.trigger;
+    if (!trig) return;
+    // Capture phase, so in "My Lists" this runs instead of the normal dropdown.
+    trig.addEventListener("click", function(e){
+      if (state.mode !== "Lists") return;
+      e.stopImmediatePropagation();
+      if (trig.classList.contains("open") && ddOpen) ddOpen.close(); else openListMixPicker(trig);
+    }, true);
+  })();
+
+  // ---------- Save character: plus -> bookmark / lists ----------
   var saveBtn = $("saveBtn");
   var ICON_PLUS = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
-  var ICON_HEART_ON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2.2 10 2.2 6.1A3.1 3.1 0 0 1 8 4.7a3.1 3.1 0 0 1 5.8 1.4C13.8 10 8 13.6 8 13.6Z" fill="currentColor"/></svg>';
-  var ICON_HEART = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13.6S2.2 10 2.2 6.1A3.1 3.1 0 0 1 8 4.7a3.1 3.1 0 0 1 5.8 1.4C13.8 10 8 13.6 8 13.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+  // Bookmark (was a heart): "come back to this one", which suits studying.
+  var ICON_HEART_ON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 2.8c0-.5.4-.9.9-.9h5.8c.5 0 .9.4.9.9v11L8 11.2l-3.8 2.6Z" fill="currentColor"/></svg>';
+  var ICON_HEART = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.2 2.8c0-.5.4-.9.9-.9h5.8c.5 0 .9.4.9.9v11L8 11.2l-3.8 2.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
   var ICON_LIST = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.5 4h8M5.5 8h8M5.5 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="2.4" cy="4" r=".9" fill="currentColor"/><circle cx="2.4" cy="8" r=".9" fill="currentColor"/><circle cx="2.4" cy="12" r=".9" fill="currentColor"/></svg>';
   var ICON_LIST_ON = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h6.5M2.5 8h6.5M2.5 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9.8 11.3l1.8 1.8 3.4-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ICON_TRASH = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -14740,6 +14830,7 @@
   }
 
   function setLabel(mode){
+    if (mode === "Lists") return listMixLabel();
     var v = state.sets[mode];
     if (v === "fav") return t("listFav");
     if (v && v.indexOf("list:") === 0){ var l = findList(v.slice(5)); return l ? l.name : t("setAll"); }
@@ -14766,7 +14857,7 @@
     var start = makeEl("button", "btn btn-primary", t("quizStart"));
     start.type = "button";
     start.addEventListener("click", function(){
-      startQuiz(kind, (quizAllScripts && kind === "test") || state.mode === "All" ? "All" : state.mode);
+      startQuiz(kind, quizAllScripts && kind === "test" ? "All" : state.mode);
     });
     box.appendChild(start);
     quizBody.appendChild(box);
@@ -14795,10 +14886,20 @@
   }
 
   function buildQuiz(script){
-    var scripts = script === "All" ? QUIZ_SCRIPTS : [script];
+    var scripts = script === "All" ? QUIZ_SCRIPTS : (script === "Lists" ? ["Hiragana", "Katakana", "Kanji"] : [script]);
     var pools = {}, wrong = {};
-    scripts.forEach(function(s){ pools[s] = questionPool(s); wrong[s] = distractorAnswers(s); });
-    var combined = scripts.reduce(function(a, s){ return a.concat(pools[s]); }, []);
+    scripts.forEach(function(s){ wrong[s] = distractorAnswers(s); });
+    var combined;
+    if (script === "Lists"){
+      // Questions from the picked lists, each asked as its own script.
+      combined = listMixChars().map(function(ch){
+        var sc = charScript(ch);
+        return { script: sc, char: ch, answer: answerFor(sc, ch) };
+      });
+    } else {
+      scripts.forEach(function(s){ pools[s] = questionPool(s); });
+      combined = scripts.reduce(function(a, s){ return a.concat(pools[s]); }, []);
+    }
     var picked = shuffle(combined).slice(0, Math.min(QUIZ_LENGTH, combined.length));
     return picked.map(function(q){
       var seen = {}; seen[q.answer] = true;
