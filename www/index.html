@@ -378,6 +378,8 @@
 
   /* --- Page 4: the character trainer --- */
   #page4.page{ gap:0; }
+  /* Same gap on all four sides between the card edge and the grey box */
+  .card:has(#page4.active){ padding-top:26px; }
   .mode-btn{
     flex:1; padding:9px 4px; border-radius:9px; border:1px solid transparent;
     font-family:var(--font-display); font-weight:600; font-size:13px; cursor:pointer;
@@ -429,7 +431,7 @@
     border:3.5px solid transparent; border-top-color:currentColor; border-bottom:none; opacity:.7;
   }
   .set-row .dd-trigger{ flex:1; padding:12px 12px 12px 13px; }
-  .practice-pane{ display:flex; flex-direction:column; gap:16px; }
+  .practice-pane{ display:flex; flex-direction:column; gap:0; }
   .practice-pane[hidden], .quiz-pane[hidden]{ display:none; }
   .stage-tools-center{ position:absolute; top:8px; left:50%; transform:translateX(-50%); display:flex; z-index:2; }
   #saveBtn[hidden]{ display:none; }
@@ -467,7 +469,7 @@
   /* Save-to popover: heart (Favourites) / list icons, then the lists */
   /* Same size and look as the trainer's map / sound buttons, with equal
      padding on all four sides of the popup. */
-  .dd-pop.save-pop{ padding:6px; border-radius:20px; }
+  .dd-pop.save-pop{ padding:6px; border-radius:12px; }
   .dd-pop.save-pop.save-pop-lists{ padding:8px; border-radius:14px; }
   .save-row{ display:flex; gap:6px; justify-content:center; }
   .save-icon-btn{
@@ -968,12 +970,15 @@
   .options-toggle[aria-expanded="true"] svg{ transform:rotate(180deg); }
 
   .options-panel{
-    margin-top:16px;
     display:grid; grid-template-rows:0fr;
     transition:grid-template-rows .35s ease;
   }
   .options-panel.expanded{ grid-template-rows:1fr; }
+  /* The space above the options lives inside the collapsing part, so when
+     they're hidden the card's edge sits as close to the grey box below as
+     it does on the other three sides. */
   .options-panel-inner{ overflow:hidden; min-height:0; }
+  .options-panel-inner > :first-child{ margin-top:32px; }
   .bottom-row{ display:flex; align-items:center; gap:10px; }
   .bottom-row select{ flex:1; }
   .bottom-row-pair{ display:flex; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
