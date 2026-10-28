@@ -95,13 +95,13 @@
     justify-content:center;
     /* edge-to-edge: the page fills the whole screen (behind the status and
        navigation bars), so keep content clear of them via the safe area */
-    padding:calc(28px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(60px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+    padding:calc(8px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(60px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   }
   .shell{ width:100%; max-width:460px; }
 
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
-    padding:2px 4px 18px;
+    padding:2px 4px 12px;
   }
   .wordmark{
     font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:.01em;
@@ -871,7 +871,7 @@
        top padding plus the topbar row above it) so the tutorial lines up
        with the same "border" as the page behind it, instead of floating
        centered lower down whenever its content is short. */
-    padding-top:calc(72px + env(safe-area-inset-top, 0px));
+    padding-top:calc(46px + env(safe-area-inset-top, 0px));
     opacity:0; pointer-events:none;
     transition:opacity .25s ease, background-color .25s ease;
   }
